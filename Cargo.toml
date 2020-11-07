@@ -1,0 +1,14 @@
+[package]
+name = "junit-parser"
+version = "0.1.0"
+authors = ["Boris Faure <boris@fau.re>"]
+license = "BSD-2-Clause"
+edition = "2018"
+keywords = ["junit", "xml", "parser"]
+readme = "README.md"
+description = "Rust library to parse JUnit XML files"
+repository = "https://github.com/borisfaure/junit-parser"
+documentation = "https://docs.rs/junit-parser/"
+
+[dependencies]
+quick-xml = "0.20"
