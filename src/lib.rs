@@ -3,7 +3,9 @@
 mod errors;
 
 use errors::JunitParserError;
+use quick_xml::events::BytesStart as XMLBytesStart;
 use quick_xml::events::Event as XMLEvent;
+use quick_xml::Error as XMLError;
 use quick_xml::Reader as XMLReader;
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -12,7 +14,28 @@ use std::str;
 
 pub struct TestCase {}
 
-pub struct TestSuite {}
+pub struct TestSuite {
+    pub cases: HashMap<String, TestCase>,
+    pub time: f64,
+    pub tests: u64,
+    pub errors: u64,
+    pub failures: u64,
+    pub skipped: u64,
+    pub name: String,
+}
+impl TestSuite {
+    fn new() -> Self {
+        Self {
+            cases: HashMap::new(),
+            time: 0f64,
+            tests: 0u64,
+            errors: 0u64,
+            failures: 0u64,
+            skipped: 0u64,
+            name: String::new(),
+        }
+    }
+}
 
 pub struct TestSuites {
     pub suites: HashMap<String, TestSuite>,
@@ -34,6 +57,49 @@ impl TestSuites {
             skipped: 0u64,
             name: String::new(),
         }
+    }
+
+    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), JunitParserError> {
+        for a in e.attributes() {
+            let a = a?;
+            match a.key {
+                b"time" => self.time = try_from_attribute_value_f64(a.value)?,
+                b"tests" => self.tests = try_from_attribute_value_u64(a.value)?,
+                b"errors" => self.errors = try_from_attribute_value_u64(a.value)?,
+                b"failures" => self.failures = try_from_attribute_value_u64(a.value)?,
+                b"skipped" => self.skipped = try_from_attribute_value_u64(a.value)?,
+                b"name" => self.name = try_from_attribute_value_string(a.value)?,
+                _ => {}
+            };
+        }
+        Ok(())
+    }
+
+    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, JunitParserError> {
+        let mut ts = Self::new();
+        ts.parse_attributes(e)?;
+        Ok(ts)
+    }
+
+    fn new_from_reader<'a, B: BufRead>(
+        e: &'a XMLBytesStart,
+        r: &mut XMLReader<B>,
+    ) -> Result<Self, JunitParserError> {
+        let mut ts = Self::new();
+        ts.parse_attributes(e)?;
+        let mut buf = Vec::new();
+        loop {
+            match r.read_event(&mut buf) {
+                Ok(XMLEvent::End(ref e)) if e.name() == b"testsuites" => break,
+                Ok(XMLEvent::Eof) => {
+                    return Err(XMLError::UnexpectedEof("testsuites".to_string()).into())
+                }
+                Err(err) => return Err(err.into()),
+                _ => (),
+            }
+        }
+        buf.clear();
+        Ok(ts)
     }
 }
 
@@ -85,38 +151,19 @@ fn try_from_attribute_value_string<'a>(value: Cow<'a, [u8]>) -> Result<String, J
 pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, JunitParserError> {
     let mut r = XMLReader::from_reader(reader);
     let mut buf = Vec::new();
-    let mut test_suites = TestSuites::new();
     loop {
         match r.read_event(&mut buf) {
-            Ok(XMLEvent::Start(ref e)) | Ok(XMLEvent::Empty(ref e)) => match e.name() {
-                b"testsuites" => {
-                    for a in e.attributes() {
-                        let a = a?;
-                        match a.key {
-                            b"time" => test_suites.time = try_from_attribute_value_f64(a.value)?,
-                            b"tests" => test_suites.tests = try_from_attribute_value_u64(a.value)?,
-                            b"errors" => {
-                                test_suites.errors = try_from_attribute_value_u64(a.value)?
-                            }
-                            b"failures" => {
-                                test_suites.failures = try_from_attribute_value_u64(a.value)?
-                            }
-                            b"skipped" => {
-                                test_suites.skipped = try_from_attribute_value_u64(a.value)?
-                            }
-                            b"name" => test_suites.name = try_from_attribute_value_string(a.value)?,
-                            _ => {}
-                        };
-                    }
-                }
-                b"testsuite" => {}
-                _ => (),
-            },
-            Ok(XMLEvent::Eof) => break,
-            Err(e) => return Err(e.into()),
+            Ok(XMLEvent::Empty(ref e)) if e.name() == b"testsuites" => {
+                return TestSuites::new_empty(e);
+            }
+            Ok(XMLEvent::Start(ref e)) if e.name() == b"testsuites" => {
+                return TestSuites::new_from_reader(e, &mut r);
+            }
+            Ok(XMLEvent::Eof) => {
+                return Err(XMLError::UnexpectedEof("testsuites".to_string()).into())
+            }
+            Err(err) => return Err(err.into()),
             _ => (),
         }
-        buf.clear();
     }
-    Ok(test_suites)
 }
