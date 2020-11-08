@@ -2,7 +2,7 @@
 
 mod errors;
 
-use errors::JunitParserError;
+pub use errors::Error;
 use quick_xml::events::BytesStart as XMLBytesStart;
 use quick_xml::events::Event as XMLEvent;
 use quick_xml::Error as XMLError;
@@ -26,7 +26,7 @@ impl TestFailure {
             failure_type: String::new(),
         }
     }
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), JunitParserError> {
+    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -38,7 +38,7 @@ impl TestFailure {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, JunitParserError> {
+    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
         let mut tf = Self::new();
         tf.parse_attributes(e)?;
         Ok(tf)
@@ -47,7 +47,7 @@ impl TestFailure {
     fn new_from_reader<'a, B: BufRead>(
         e: &'a XMLBytesStart,
         r: &mut XMLReader<B>,
-    ) -> Result<Self, JunitParserError> {
+    ) -> Result<Self, Error> {
         let mut tf = Self::new();
         tf.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -83,7 +83,7 @@ impl TestError {
             error_type: String::new(),
         }
     }
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), JunitParserError> {
+    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -95,7 +95,7 @@ impl TestError {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, JunitParserError> {
+    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
         let mut te = Self::new();
         te.parse_attributes(e)?;
         Ok(te)
@@ -104,7 +104,7 @@ impl TestError {
     fn new_from_reader<'a, B: BufRead>(
         e: &'a XMLBytesStart,
         r: &mut XMLReader<B>,
-    ) -> Result<Self, JunitParserError> {
+    ) -> Result<Self, Error> {
         let mut te = Self::new();
         te.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -140,7 +140,7 @@ impl TestSkipped {
             skipped_type: String::new(),
         }
     }
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), JunitParserError> {
+    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -152,7 +152,7 @@ impl TestSkipped {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, JunitParserError> {
+    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         Ok(ts)
@@ -161,7 +161,7 @@ impl TestSkipped {
     fn new_from_reader<'a, B: BufRead>(
         e: &'a XMLBytesStart,
         r: &mut XMLReader<B>,
-    ) -> Result<Self, JunitParserError> {
+    ) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -251,7 +251,7 @@ impl TestCase {
             status: TestStatus::Success,
         }
     }
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), JunitParserError> {
+    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -263,7 +263,7 @@ impl TestCase {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, JunitParserError> {
+    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
         let mut tc = Self::new();
         tc.parse_attributes(e)?;
         Ok(tc)
@@ -272,7 +272,7 @@ impl TestCase {
     fn new_from_reader<'a, B: BufRead>(
         e: &'a XMLBytesStart,
         r: &mut XMLReader<B>,
-    ) -> Result<Self, JunitParserError> {
+    ) -> Result<Self, Error> {
         let mut tc = Self::new();
         tc.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -337,7 +337,7 @@ impl TestSuite {
             name: String::new(),
         }
     }
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), JunitParserError> {
+    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -353,7 +353,7 @@ impl TestSuite {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, JunitParserError> {
+    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         Ok(ts)
@@ -362,7 +362,7 @@ impl TestSuite {
     fn new_from_reader<'a, B: BufRead>(
         e: &'a XMLBytesStart,
         r: &mut XMLReader<B>,
-    ) -> Result<Self, JunitParserError> {
+    ) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -372,7 +372,7 @@ impl TestSuite {
                 Ok(XMLEvent::Start(ref e)) if e.name() == b"testcase" => {
                     let testcase = TestCase::new_from_reader(e, r)?;
                     if ts.cases.contains_key(&testcase.name) {
-                        return Err(JunitParserError::DuplicateError {
+                        return Err(Error::DuplicateError {
                             kind: "testcase".to_string(),
                             name: testcase.name,
                         });
@@ -382,7 +382,7 @@ impl TestSuite {
                 Ok(XMLEvent::Empty(ref e)) if e.name() == b"testcase" => {
                     let testcase = TestCase::new_empty(e)?;
                     if ts.cases.contains_key(&testcase.name) {
-                        return Err(JunitParserError::DuplicateError {
+                        return Err(Error::DuplicateError {
                             kind: "testcase".to_string(),
                             name: testcase.name,
                         });
@@ -424,7 +424,7 @@ impl TestSuites {
         }
     }
 
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), JunitParserError> {
+    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -440,7 +440,7 @@ impl TestSuites {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, JunitParserError> {
+    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         Ok(ts)
@@ -449,7 +449,7 @@ impl TestSuites {
     fn new_from_reader<'a, B: BufRead>(
         e: &'a XMLBytesStart,
         r: &mut XMLReader<B>,
-    ) -> Result<Self, JunitParserError> {
+    ) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -459,7 +459,7 @@ impl TestSuites {
                 Ok(XMLEvent::Start(ref e)) if e.name() == b"testsuite" => {
                     let suite = TestSuite::new_from_reader(e, r)?;
                     if ts.suites.contains_key(&suite.name) {
-                        return Err(JunitParserError::DuplicateError {
+                        return Err(Error::DuplicateError {
                             kind: "testsuite".to_string(),
                             name: suite.name,
                         });
@@ -469,7 +469,7 @@ impl TestSuites {
                 Ok(XMLEvent::Empty(ref e)) if e.name() == b"testsuite" => {
                     let suite = TestSuite::new_empty(e)?;
                     if ts.suites.contains_key(&suite.name) {
-                        return Err(JunitParserError::DuplicateError {
+                        return Err(Error::DuplicateError {
                             kind: "testsuite".to_string(),
                             name: suite.name,
                         });
@@ -488,7 +488,7 @@ impl TestSuites {
     }
 }
 
-fn try_from_attribute_value_f64<'a>(value: Cow<'a, [u8]>) -> Result<f64, JunitParserError> {
+fn try_from_attribute_value_f64<'a>(value: Cow<'a, [u8]>) -> Result<f64, Error> {
     match value {
         Cow::Borrowed(b) => {
             let s = str::from_utf8(b)?;
@@ -507,7 +507,7 @@ fn try_from_attribute_value_f64<'a>(value: Cow<'a, [u8]>) -> Result<f64, JunitPa
     }
 }
 
-fn try_from_attribute_value_u64<'a>(value: Cow<'a, [u8]>) -> Result<u64, JunitParserError> {
+fn try_from_attribute_value_u64<'a>(value: Cow<'a, [u8]>) -> Result<u64, Error> {
     match value {
         Cow::Borrowed(b) => {
             let s = str::from_utf8(b)?;
@@ -526,14 +526,14 @@ fn try_from_attribute_value_u64<'a>(value: Cow<'a, [u8]>) -> Result<u64, JunitPa
     }
 }
 
-fn try_from_attribute_value_string<'a>(value: Cow<'a, [u8]>) -> Result<String, JunitParserError> {
+fn try_from_attribute_value_string<'a>(value: Cow<'a, [u8]>) -> Result<String, Error> {
     match value {
         Cow::Borrowed(b) => Ok(str::from_utf8(b)?.to_owned()),
         Cow::Owned(ref b) => Ok(str::from_utf8(b)?.to_owned()),
     }
 }
 
-pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, JunitParserError> {
+pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
     let mut r = XMLReader::from_reader(reader);
     let mut buf = Vec::new();
     loop {

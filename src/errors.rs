@@ -1,6 +1,6 @@
-/// JunitParserError enumerates all possible errors returned by this library.
+/// Error enumerates all possible errors returned by this library.
 #[derive(Debug)]
-pub enum JunitParserError {
+pub enum Error {
     /// Error while parsing XML
     XMLError(::quick_xml::Error),
     /// Error while converting f64 attribute
@@ -11,54 +11,52 @@ pub enum JunitParserError {
     DuplicateError { kind: String, name: String },
 }
 
-impl std::error::Error for JunitParserError {
+impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            JunitParserError::XMLError(e) => Some(e),
-            JunitParserError::ParseFloatError(e) => Some(e),
-            JunitParserError::ParseIntError(e) => Some(e),
+            Error::XMLError(e) => Some(e),
+            Error::ParseFloatError(e) => Some(e),
+            Error::ParseIntError(e) => Some(e),
             _ => None,
         }
     }
 }
 
-impl std::fmt::Display for JunitParserError {
+impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            JunitParserError::XMLError(err) => write!(f, "XML error: {}", err),
-            JunitParserError::ParseFloatError(err) => write!(f, "ParseFloat error: {}", err),
-            JunitParserError::ParseIntError(err) => write!(f, "ParseInt error: {}", err),
-            JunitParserError::DuplicateError { kind, name } => {
-                write!(f, "Duplicate {} named {}", kind, name)
-            }
+            Error::XMLError(err) => write!(f, "XML error: {}", err),
+            Error::ParseFloatError(err) => write!(f, "ParseFloat error: {}", err),
+            Error::ParseIntError(err) => write!(f, "ParseInt error: {}", err),
+            Error::DuplicateError { kind, name } => write!(f, "Duplicate {} named {}", kind, name),
         }
     }
 }
 
-impl From<::std::num::ParseFloatError> for JunitParserError {
+impl From<::std::num::ParseFloatError> for Error {
     #[inline]
-    fn from(error: ::std::num::ParseFloatError) -> JunitParserError {
-        JunitParserError::ParseFloatError(error)
+    fn from(error: ::std::num::ParseFloatError) -> Error {
+        Error::ParseFloatError(error)
     }
 }
 
-impl From<::std::num::ParseIntError> for JunitParserError {
+impl From<::std::num::ParseIntError> for Error {
     #[inline]
-    fn from(error: ::std::num::ParseIntError) -> JunitParserError {
-        JunitParserError::ParseIntError(error)
+    fn from(error: ::std::num::ParseIntError) -> Error {
+        Error::ParseIntError(error)
     }
 }
 
-impl From<::std::str::Utf8Error> for JunitParserError {
+impl From<::std::str::Utf8Error> for Error {
     #[inline]
-    fn from(error: ::std::str::Utf8Error) -> JunitParserError {
-        JunitParserError::XMLError(::quick_xml::Error::Utf8(error))
+    fn from(error: ::std::str::Utf8Error) -> Error {
+        Error::XMLError(::quick_xml::Error::Utf8(error))
     }
 }
 
-impl From<::quick_xml::Error> for JunitParserError {
+impl From<::quick_xml::Error> for Error {
     #[inline]
-    fn from(err: ::quick_xml::Error) -> JunitParserError {
-        JunitParserError::XMLError(err)
+    fn from(err: ::quick_xml::Error) -> Error {
+        Error::XMLError(err)
     }
 }

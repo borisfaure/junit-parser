@@ -1,4 +1,5 @@
 use junit_parser;
+use junit_parser::Error;
 use std::io::Cursor;
 
 #[test]
@@ -532,4 +533,60 @@ fn test_case_skipped_message_text() {
     assert_eq!(te.skipped_type, "skipped");
     assert_eq!(te.message, "test skipped");
     assert_eq!(te.text, "foo::bar skipped for some reason");
+}
+
+#[test]
+fn test_error_xml() {
+    let xml = r#"<testsuites skipped"1" />"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_err());
+    let err = r.err().unwrap();
+    assert!(matches!(err, Error::XMLError(_)));
+}
+
+#[test]
+fn test_error_parseint() {
+    let xml = r#"<testsuites skipped="foo" />"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_err());
+    let err = r.err().unwrap();
+    assert!(matches!(err, Error::ParseIntError(_)));
+}
+
+#[test]
+fn test_error_parsefloat() {
+    let xml = r#"<testsuites time="foo" />"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_err());
+    let err = r.err().unwrap();
+    assert!(matches!(err, Error::ParseFloatError(_)));
+}
+
+#[test]
+fn test_error_duplicate_suites() {
+    let xml = r#"<testsuites>
+        <testsuite name="foo" />
+        <testsuite name="foo" />
+        </testsuites>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_err());
+    let err = r.err().unwrap();
+    assert!(matches!(err, Error::DuplicateError{..}));
+}
+
+#[test]
+fn test_error_duplicate_cases() {
+    let xml = r#"<testsuite>
+        <testcase name="foo" />
+        <testcase name="foo" />
+        </testsuite>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_err());
+    let err = r.err().unwrap();
+    assert!(matches!(err, Error::DuplicateError{..}));
 }
