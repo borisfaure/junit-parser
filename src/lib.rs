@@ -13,9 +13,13 @@ use std::io::prelude::*;
 use std::str;
 
 #[derive(Debug)]
+/// Value from a `<failure />` tag
 pub struct TestFailure {
+    /// The `message` attribute
     pub message: String,
+    /// Body of the `<failure />` tag
     pub text: String,
+    /// The `type` attribute
     pub failure_type: String,
 }
 impl TestFailure {
@@ -70,9 +74,13 @@ impl TestFailure {
 }
 
 #[derive(Debug)]
+/// Value from an `<error />` tag
 pub struct TestError {
+    /// The `message` attribute
     pub message: String,
+    /// Body of the `<error />` tag
     pub text: String,
+    /// The `type` attribute
     pub error_type: String,
 }
 impl TestError {
@@ -127,9 +135,13 @@ impl TestError {
 }
 
 #[derive(Debug)]
+/// Value from a `<skipped />` tag
 pub struct TestSkipped {
+    /// The `message` attribute
     pub message: String,
+    /// Body of the `<skipped />` tag
     pub text: String,
+    /// The `type` attribute
     pub skipped_type: String,
 }
 impl TestSkipped {
@@ -184,25 +196,37 @@ impl TestSkipped {
 }
 
 #[derive(Debug)]
+/// Status of a test case
 pub enum TestStatus {
+    /// Success
     Success,
+    /// Test case has a `<error />` tag
     Error(TestError),
+    /// Test case has a `<failure />` tag
     Failure(TestFailure),
+    /// Test case has a `<skipped />` tag
     Skipped(TestSkipped),
 }
 impl TestStatus {
+    /// Returns `true` if the `TestStatus` is [`Success`](#variant.Success).
     pub fn is_success(&self) -> bool {
         match self {
             TestStatus::Success => true,
             _ => false,
         }
     }
+    /// Returns `true` if the `TestStatus` is [`Error(_)`](#variant.Error).
     pub fn is_error(&self) -> bool {
         match self {
             TestStatus::Error(_) => true,
             _ => false,
         }
     }
+    /// Returns the contained [`Error(_)`](#variant.Error) value as a reference
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is not an [`Errror(_)`](#variant.Error)
     pub fn error_as_ref<'a>(&'a self) -> &'a TestError {
         if let TestStatus::Error(ref e) = self {
             return e;
@@ -210,12 +234,18 @@ impl TestStatus {
         panic!("called `TestStatus::error()` on a value that is not TestStatus::Error(_)");
     }
 
+    /// Returns `true` if the `TestStatus` is [`Failure(_)`](#variant.Failure).
     pub fn is_failure(&self) -> bool {
         match self {
             TestStatus::Failure(_) => true,
             _ => false,
         }
     }
+    /// Returns the contained [`Failure(_)`](#variant.Failure) value as a reference
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is not a [`Failure(_)`](#variant.Failure)
     pub fn failure_as_ref<'a>(&'a self) -> &'a TestFailure {
         if let TestStatus::Failure(ref e) = self {
             return e;
@@ -223,12 +253,18 @@ impl TestStatus {
         panic!("called `TestStatus::failure()` on a value that is not TestStatus::Failure(_)");
     }
 
+    /// Returns `true` if the `TestStatus` is [`Skipped(_)`](#variant.Skipped).
     pub fn is_skipped(&self) -> bool {
         match self {
             TestStatus::Skipped(_) => true,
             _ => false,
         }
     }
+    /// Returns the contained [`Skipped(_)`](#variant.Skipped) value as a reference
+    ///
+    /// # Panics
+    ///
+    /// Panics if the value is not a [`Skipped(_)`](#variant.Skipped)
     pub fn skipped_as_ref<'a>(&'a self) -> &'a TestSkipped {
         if let TestStatus::Skipped(ref e) = self {
             return e;
@@ -238,9 +274,13 @@ impl TestStatus {
 }
 
 #[derive(Debug)]
+/// A test case
 pub struct TestCase {
+    /// How long the test case took to run, from the `time` attribute
     pub time: f64,
+    /// Name of the test case, from the `name` attribute
     pub name: String,
+    /// Status of the test case
     pub status: TestStatus,
 }
 impl TestCase {
@@ -316,13 +356,20 @@ impl TestCase {
 }
 
 #[derive(Debug)]
+/// A test suite, containing test cases [`TestCase`](struct.TestCase.html)
 pub struct TestSuite {
     pub cases: HashMap<String, TestCase>,
+    /// How long the test suite took to run, from the `time` attribute
     pub time: f64,
+    /// Number of tests in the test suite, from the `tests` attribute
     pub tests: u64,
+    /// Number of tests in error in the test suite, from the `errors` attribute
     pub errors: u64,
+    /// Number of tests in failure in the test suite, from the `failures` attribute
     pub failures: u64,
+    /// Number of tests skipped in the test suites, from the `skipped` attribute
     pub skipped: u64,
+    /// Name of the test suite, from the `name` attribute
     pub name: String,
 }
 impl TestSuite {
@@ -402,13 +449,20 @@ impl TestSuite {
 }
 
 #[derive(Debug)]
+/// Struct representing a JUnit report, containing test suites [`TestSuite`](struct.TestSuite.html)
 pub struct TestSuites {
     pub suites: HashMap<String, TestSuite>,
+    /// How long the test suites took to run, from the `time` attribute
     pub time: f64,
+    /// Number of tests in the test suites, from the `tests` attribute
     pub tests: u64,
+    /// Number of tests in error in the test suites, from the `errors` attribute
     pub errors: u64,
+    /// Number of tests in failure in the test suites, from the `failures` attribute
     pub failures: u64,
+    /// Number of tests skipped in the test suites, from the `skipped` attribute
     pub skipped: u64,
+    /// Name of the test suites, from the `name` attribute
     pub name: String,
 }
 impl TestSuites {
@@ -533,6 +587,7 @@ fn try_from_attribute_value_string<'a>(value: Cow<'a, [u8]>) -> Result<String, E
     }
 }
 
+/// Creates a [`TestsSuites`](struct.TestSuites.html) structure from a JUnit XML data read from `reader`
 pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
     let mut r = XMLReader::from_reader(reader);
     let mut buf = Vec::new();
