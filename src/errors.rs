@@ -7,24 +7,30 @@ pub enum JunitParserError {
     ParseFloatError(std::num::ParseFloatError),
     /// Error while converting u64 attribute
     ParseIntError(std::num::ParseIntError),
+    /// Duplicate test suite / test case
+    DuplicateError { kind: String, name: String },
 }
 
 impl std::error::Error for JunitParserError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match *self {
-            JunitParserError::XMLError(_) => None,
-            JunitParserError::ParseFloatError(_) => None,
-            JunitParserError::ParseIntError(_) => None,
+        match self {
+            JunitParserError::XMLError(e) => Some(e),
+            JunitParserError::ParseFloatError(e) => Some(e),
+            JunitParserError::ParseIntError(e) => Some(e),
+            _ => None,
         }
     }
 }
 
 impl std::fmt::Display for JunitParserError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            JunitParserError::XMLError(ref err) => write!(f, "XML error: {}", err),
-            JunitParserError::ParseFloatError(ref err) => write!(f, "ParseFloat error: {}", err),
-            JunitParserError::ParseIntError(ref err) => write!(f, "ParseInt error: {}", err),
+        match self {
+            JunitParserError::XMLError(err) => write!(f, "XML error: {}", err),
+            JunitParserError::ParseFloatError(err) => write!(f, "ParseFloat error: {}", err),
+            JunitParserError::ParseIntError(err) => write!(f, "ParseInt error: {}", err),
+            JunitParserError::DuplicateError { kind, name } => {
+                write!(f, "Duplicate {} named {}", kind, name)
+            }
         }
     }
 }
