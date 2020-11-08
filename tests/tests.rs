@@ -544,6 +544,15 @@ fn test_error_xml() {
     let err = r.err().unwrap();
     assert!(matches!(err, Error::XMLError(_)));
 }
+#[test]
+fn test_error_xml_end_mismatch() {
+    let xml = r#"<testsuites> <foo> </bar> </testsuites>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_err());
+    let err = r.err().unwrap();
+    assert!(matches!(err, Error::XMLError(_)));
+}
 
 #[test]
 fn test_error_parseint() {
@@ -589,4 +598,247 @@ fn test_error_duplicate_cases() {
     assert!(r.is_err());
     let err = r.err().unwrap();
     assert!(matches!(err, Error::DuplicateError{..}));
+}
+
+#[test]
+fn test_large_test_suite() {
+    let xml = r#"
+<testsuite tests="3" failures="1">
+  <testcase classname="foo1" name="ASuccessfulTest"/>
+  <testcase classname="foo2" name="AnotherSuccessfulTest"/>
+  <testcase classname="foo3" name="AFailingTest">
+    <failure type="NotEnoughFoo"> details about failure </failure>
+  </testcase>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let tss = r.unwrap();
+    assert_eq!(tss.suites.len(), 1);
+    let ts = tss.suites.get("").unwrap();
+    assert_eq!(ts.cases.len(), 3);
+    let tc = ts.cases.get("ASuccessfulTest").unwrap();
+    assert_eq!(tc.name, "ASuccessfulTest");
+    assert!(tc.status.is_success());
+    let tc = ts.cases.get("AnotherSuccessfulTest").unwrap();
+    assert_eq!(tc.name, "AnotherSuccessfulTest");
+    assert!(tc.status.is_success());
+    let tc = ts.cases.get("AFailingTest").unwrap();
+    assert_eq!(tc.name, "AFailingTest");
+    assert!(tc.status.is_failure());
+    let tf = tc.status.failure_as_ref();
+    assert_eq!(tf.failure_type, "NotEnoughFoo");
+    assert_eq!(tf.message, "");
+    assert_eq!(tf.text, "details about failure");
+}
+
+#[test]
+fn test_large_test_suites() {
+    let xml = r#"<testsuites tests="6" failures="2">
+<testsuite name="foo" tests="3" failures="1">
+  <testcase classname="foo1" name="ASuccessfulTest"/>
+  <testcase classname="foo2" name="AnotherSuccessfulTest"/>
+  <testcase classname="foo3" name="AFailingTest">
+    <failure type="NotEnoughFoo"> details about failure </failure>
+  </testcase>
+</testsuite>
+<testsuite name="bar" tests="3" failures="1">
+  <testcase classname="bar1" name="ASuccessfulTest"/>
+  <testcase classname="bar2" name="AnotherSuccessfulTest"/>
+  <testcase classname="bar3" name="AFailingTest">
+    <failure type="NotEnoughBar"> details about failure </failure>
+  </testcase>
+</testsuite>
+</testsuites>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let tss = r.unwrap();
+    assert_eq!(tss.suites.len(), 2);
+    let ts = tss.suites.get("foo").unwrap();
+    assert_eq!(ts.cases.len(), 3);
+    let tc = ts.cases.get("ASuccessfulTest").unwrap();
+    assert_eq!(tc.name, "ASuccessfulTest");
+    assert!(tc.status.is_success());
+    let tc = ts.cases.get("AnotherSuccessfulTest").unwrap();
+    assert_eq!(tc.name, "AnotherSuccessfulTest");
+    assert!(tc.status.is_success());
+    let tc = ts.cases.get("AFailingTest").unwrap();
+    assert_eq!(tc.name, "AFailingTest");
+    assert!(tc.status.is_failure());
+    let tf = tc.status.failure_as_ref();
+    assert_eq!(tf.failure_type, "NotEnoughFoo");
+    assert_eq!(tf.message, "");
+    assert_eq!(tf.text, "details about failure");
+
+    let ts = tss.suites.get("bar").unwrap();
+    assert_eq!(ts.cases.len(), 3);
+    let tc = ts.cases.get("ASuccessfulTest").unwrap();
+    assert_eq!(tc.name, "ASuccessfulTest");
+    assert!(tc.status.is_success());
+    let tc = ts.cases.get("AnotherSuccessfulTest").unwrap();
+    assert_eq!(tc.name, "AnotherSuccessfulTest");
+    assert!(tc.status.is_success());
+    let tc = ts.cases.get("AFailingTest").unwrap();
+    assert_eq!(tc.name, "AFailingTest");
+    assert!(tc.status.is_failure());
+    let tf = tc.status.failure_as_ref();
+    assert_eq!(tf.failure_type, "NotEnoughBar");
+    assert_eq!(tf.message, "");
+    assert_eq!(tf.text, "details about failure");
+}
+
+#[test]
+fn test_large_test_suites_added_tags() {
+    let xml = r#"<testsuites tests="6" failures="2">
+    <script />
+<testsuite name="foo" tests="3" failures="1">
+  <script />
+  <testcase classname="foo1" name="ASuccessfulTest"/>
+  <script />
+  <testcase classname="foo2" name="AnotherSuccessfulTest"/>
+  <script />
+  <testcase classname="foo3" name="AFailingTest">
+    <script />
+    <failure type="NotEnoughFoo">
+      details about failure
+    </failure>
+    <script />
+  </testcase>
+  <script />
+  <testcase classname="foo4" name="ATestOnError">
+    <script />
+    <error type="Setup">
+      setup failure
+    </error>
+    <script />
+  </testcase>
+  <script />
+  <testcase classname="foo5" name="ASkippedTest">
+    <script />
+    <skipped type="skip">
+      details about being skipped
+    </skipped>
+    <script />
+  </testcase>
+</testsuite>
+</testsuites>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let tss = r.unwrap();
+    assert_eq!(tss.suites.len(), 1);
+    let ts = tss.suites.get("foo").unwrap();
+    assert_eq!(ts.cases.len(), 5);
+
+    let tc = ts.cases.get("ASuccessfulTest").unwrap();
+    assert_eq!(tc.name, "ASuccessfulTest");
+    assert!(tc.status.is_success());
+
+    let tc = ts.cases.get("AnotherSuccessfulTest").unwrap();
+    assert_eq!(tc.name, "AnotherSuccessfulTest");
+    assert!(tc.status.is_success());
+
+    let tc = ts.cases.get("AFailingTest").unwrap();
+    assert_eq!(tc.name, "AFailingTest");
+    assert!(tc.status.is_failure());
+    let tf = tc.status.failure_as_ref();
+    assert_eq!(tf.failure_type, "NotEnoughFoo");
+    assert_eq!(tf.message, "");
+    println!("{:?}", tf.text);
+    assert_eq!(tf.text, "details about failure");
+
+    let tc = ts.cases.get("ATestOnError").unwrap();
+    assert_eq!(tc.name, "ATestOnError");
+    assert!(tc.status.is_error());
+    let tf = tc.status.error_as_ref();
+    assert_eq!(tf.error_type, "Setup");
+    assert_eq!(tf.message, "");
+    assert_eq!(tf.text, "setup failure");
+
+    let tc = ts.cases.get("ASkippedTest").unwrap();
+    assert_eq!(tc.name, "ASkippedTest");
+    assert!(tc.status.is_skipped());
+    let tf = tc.status.skipped_as_ref();
+    assert_eq!(tf.skipped_type, "skip");
+    assert_eq!(tf.message, "");
+    assert_eq!(tf.text, "details about being skipped");
+}
+
+#[test]
+fn test_large_test_suites_with_comments() {
+    let xml = r#"<testsuites tests="6" failures="2">
+    <!-- -->
+<testsuite name="foo" tests="3" failures="1">
+  <!-- -->
+  <testcase classname="foo1" name="ASuccessfulTest"/>
+  <!-- -->
+  <testcase classname="foo2" name="AnotherSuccessfulTest"/>
+  <!-- -->
+  <testcase classname="foo3" name="AFailingTest">
+    <!-- -->
+    <failure type="NotEnoughFoo">
+      details about failure
+    </failure>
+    <!-- -->
+  </testcase>
+  <!-- -->
+  <testcase classname="foo4" name="ATestOnError">
+    <!-- -->
+    <error type="Setup">
+      setup failure
+    </error>
+    <!-- -->
+  </testcase>
+  <!-- -->
+  <testcase classname="foo5" name="ASkippedTest">
+    <!-- -->
+    <skipped type="skip">
+      details about being skipped
+    </skipped>
+    <!-- -->
+  </testcase>
+</testsuite>
+</testsuites>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let tss = r.unwrap();
+    assert_eq!(tss.suites.len(), 1);
+    let ts = tss.suites.get("foo").unwrap();
+    assert_eq!(ts.cases.len(), 5);
+
+    let tc = ts.cases.get("ASuccessfulTest").unwrap();
+    assert_eq!(tc.name, "ASuccessfulTest");
+    assert!(tc.status.is_success());
+
+    let tc = ts.cases.get("AnotherSuccessfulTest").unwrap();
+    assert_eq!(tc.name, "AnotherSuccessfulTest");
+    assert!(tc.status.is_success());
+
+    let tc = ts.cases.get("AFailingTest").unwrap();
+    assert_eq!(tc.name, "AFailingTest");
+    assert!(tc.status.is_failure());
+    let tf = tc.status.failure_as_ref();
+    assert_eq!(tf.failure_type, "NotEnoughFoo");
+    assert_eq!(tf.message, "");
+    println!("{:?}", tf.text);
+    assert_eq!(tf.text, "details about failure");
+
+    let tc = ts.cases.get("ATestOnError").unwrap();
+    assert_eq!(tc.name, "ATestOnError");
+    assert!(tc.status.is_error());
+    let tf = tc.status.error_as_ref();
+    assert_eq!(tf.error_type, "Setup");
+    assert_eq!(tf.message, "");
+    assert_eq!(tf.text, "setup failure");
+
+    let tc = ts.cases.get("ASkippedTest").unwrap();
+    assert_eq!(tc.name, "ASkippedTest");
+    assert!(tc.status.is_skipped());
+    let tf = tc.status.skipped_as_ref();
+    assert_eq!(tf.skipped_type, "skip");
+    assert_eq!(tf.message, "");
+    assert_eq!(tf.text, "details about being skipped");
 }
