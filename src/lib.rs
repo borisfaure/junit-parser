@@ -221,6 +221,18 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, JunitParserError
             Ok(XMLEvent::Start(ref e)) if e.name() == b"testsuites" => {
                 return TestSuites::new_from_reader(e, &mut r);
             }
+            Ok(XMLEvent::Empty(ref e)) if e.name() == b"testsuite" => {
+                let ts = TestSuite::new_empty(e)?;
+                let mut suites = TestSuites::new();
+                suites.suites.insert(ts.name.clone(), ts);
+                return Ok(suites);
+            }
+            Ok(XMLEvent::Start(ref e)) if e.name() == b"testsuite" => {
+                let ts = TestSuite::new_from_reader(e, &mut r)?;
+                let mut suites = TestSuites::new();
+                suites.suites.insert(ts.name.clone(), ts);
+                return Ok(suites);
+            }
             Ok(XMLEvent::Eof) => {
                 return Err(XMLError::UnexpectedEof("testsuites".to_string()).into())
             }
