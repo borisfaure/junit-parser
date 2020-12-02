@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use std::io::prelude::*;
 use std::str;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Value from a `<failure />` tag
 pub struct TestFailure {
     /// The `message` attribute
@@ -73,7 +73,7 @@ impl TestFailure {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Value from an `<error />` tag
 pub struct TestError {
     /// The `message` attribute
@@ -134,7 +134,7 @@ impl TestError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Value from a `<skipped />` tag
 pub struct TestSkipped {
     /// The `message` attribute
@@ -195,7 +195,7 @@ impl TestSkipped {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Status of a test case
 pub enum TestStatus {
     /// Success
