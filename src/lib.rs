@@ -23,7 +23,7 @@ pub struct TestFailure {
     pub failure_type: String,
 }
 impl TestFailure {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             message: String::new(),
             text: String::new(),
@@ -84,7 +84,7 @@ pub struct TestError {
     pub error_type: String,
 }
 impl TestError {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             message: String::new(),
             text: String::new(),
@@ -145,7 +145,7 @@ pub struct TestSkipped {
     pub skipped_type: String,
 }
 impl TestSkipped {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             message: String::new(),
             text: String::new(),
