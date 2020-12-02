@@ -587,7 +587,7 @@ fn try_from_attribute_value_string<'a>(value: Cow<'a, [u8]>) -> Result<String, E
     }
 }
 
-/// Creates a [`TestsSuites`](struct.TestSuites.html) structure from a JUnit XML data read from `reader`
+/// Creates a [`TestSuites`](struct.TestSuites.html) structure from a JUnit XML data read from `reader`
 ///
 /// # Example
 /// ```
