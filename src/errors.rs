@@ -7,8 +7,6 @@ pub enum Error {
     ParseFloatError(std::num::ParseFloatError),
     /// Error while converting u64 attribute
     ParseIntError(std::num::ParseIntError),
-    /// Duplicate test suite / test case
-    DuplicateError { kind: String, name: String },
 }
 
 impl std::error::Error for Error {
@@ -17,7 +15,6 @@ impl std::error::Error for Error {
             Error::XMLError(e) => Some(e),
             Error::ParseFloatError(e) => Some(e),
             Error::ParseIntError(e) => Some(e),
-            _ => None,
         }
     }
 }
@@ -28,7 +25,6 @@ impl std::fmt::Display for Error {
             Error::XMLError(err) => write!(f, "XML error: {}", err),
             Error::ParseFloatError(err) => write!(f, "ParseFloat error: {}", err),
             Error::ParseIntError(err) => write!(f, "ParseInt error: {}", err),
-            Error::DuplicateError { kind, name } => write!(f, "Duplicate {} named {}", kind, name),
         }
     }
 }

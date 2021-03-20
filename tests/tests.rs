@@ -114,7 +114,7 @@ fn empty_test_suite() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let t = t.suites.get("").unwrap();
+    let t = &t.suites[0];
     assert_eq!(t.cases.len(), 0);
 }
 #[test]
@@ -127,7 +127,7 @@ fn empty_test_suite_empty_attributes() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let t = t.suites.get("").unwrap();
+    let t = &t.suites[0];
     assert_eq!(t.time, 0f64);
     assert_eq!(t.tests, 0u64);
     assert_eq!(t.errors, 0u64);
@@ -147,7 +147,7 @@ fn empty_test_suite_start_end() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let t = t.suites.get("").unwrap();
+    let t = &t.suites[0];
     assert_eq!(t.time, 0f64);
     assert_eq!(t.tests, 0u64);
     assert_eq!(t.errors, 0u64);
@@ -168,7 +168,7 @@ fn empty_test_suite_with_attributes() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let t = t.suites.get("AllTests").unwrap();
+    let t = &t.suites[0];
     assert_eq!(t.time, 38730.23f64);
     assert_eq!(t.tests, 22u64);
     assert_eq!(t.errors, 5u64);
@@ -191,7 +191,7 @@ fn empty_test_suite_start_end_with_attributes() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let t = t.suites.get("AllTests").unwrap();
+    let t = &t.suites[0];
     assert_eq!(t.time, 38730.23f64);
     assert_eq!(t.tests, 22u64);
     assert_eq!(t.errors, 5u64);
@@ -209,9 +209,10 @@ fn no_suites_empty_test_suite() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let t = t.suites.get("").unwrap();
+    let t = &t.suites[0];
     assert_eq!(t.cases.len(), 0);
 }
+
 #[test]
 fn no_suites_empty_test_suite_empty_attributes() {
     let xml = r#"<testsuite
@@ -221,7 +222,7 @@ fn no_suites_empty_test_suite_empty_attributes() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let t = t.suites.get("").unwrap();
+    let t = &t.suites[0];
     assert_eq!(t.time, 0f64);
     assert_eq!(t.tests, 0u64);
     assert_eq!(t.errors, 0u64);
@@ -239,7 +240,7 @@ fn no_suites_empty_test_suites_start_end() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let t = t.suites.get("").unwrap();
+    let t = &t.suites[0];
     assert_eq!(t.time, 0f64);
     assert_eq!(t.tests, 0u64);
     assert_eq!(t.errors, 0u64);
@@ -260,7 +261,7 @@ fn no_suites_empty_test_suites_with_attributes() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let t = t.suites.get("AllTests").unwrap();
+    let t = &t.suites[0];
     assert_eq!(t.time, 38730.23f64);
     assert_eq!(t.tests, 22u64);
     assert_eq!(t.errors, 5u64);
@@ -281,7 +282,7 @@ fn no_suites_empty_test_suites_start_end_with_attributes() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let t = t.suites.get("AllTests").unwrap();
+    let t = &t.suites[0];
     assert_eq!(t.time, 38730.23f64);
     assert_eq!(t.tests, 22u64);
     assert_eq!(t.errors, 5u64);
@@ -301,9 +302,9 @@ fn test_case_success() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_success());
@@ -320,9 +321,9 @@ fn test_case_success_stdout() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_success());
@@ -340,9 +341,9 @@ fn test_case_error_empty() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_error());
@@ -360,9 +361,9 @@ fn test_case_error_message() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_error());
@@ -385,9 +386,9 @@ fn test_case_error_message_text() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_error());
@@ -409,9 +410,9 @@ fn test_case_failure_empty() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_failure());
@@ -429,9 +430,9 @@ fn test_case_failure_message() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_failure());
@@ -454,9 +455,9 @@ fn test_case_failure_message_text() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_failure());
@@ -478,9 +479,9 @@ fn test_case_skipped_empty() {
     debug_assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_skipped());
@@ -498,9 +499,9 @@ fn test_case_skipped_message() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_skipped());
@@ -523,9 +524,9 @@ fn test_case_skipped_message_text() {
     assert!(r.is_ok());
     let t = r.unwrap();
     assert_eq!(t.suites.len(), 1);
-    let ts = t.suites.get("foo").unwrap();
+    let ts = &t.suites[0];
     assert_eq!(ts.cases.len(), 1);
-    let tc = ts.cases.get("bar").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.time, 12.34f64);
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_skipped());
@@ -575,29 +576,39 @@ fn test_error_parsefloat() {
 }
 
 #[test]
-fn test_error_duplicate_suites() {
+fn test_duplicate_suites() {
     let xml = r#"<testsuites>
         <testsuite name="foo" />
         <testsuite name="foo" />
         </testsuites>"#;
     let cursor = Cursor::new(xml);
     let r = junit_parser::from_reader(cursor);
-    assert!(r.is_err());
-    let err = r.err().unwrap();
-    assert!(matches!(err, Error::DuplicateError{..}));
+    assert!(r.is_ok());
+    let tss = r.unwrap();
+    assert_eq!(tss.suites.len(), 2);
+    let ts = &tss.suites[0];
+    assert_eq!(ts.name, "foo");
+    let ts = &tss.suites[1];
+    assert_eq!(ts.name, "foo");
 }
 
 #[test]
-fn test_error_duplicate_cases() {
+fn test_duplicate_cases() {
     let xml = r#"<testsuite>
         <testcase name="foo" />
         <testcase name="foo" />
         </testsuite>"#;
     let cursor = Cursor::new(xml);
     let r = junit_parser::from_reader(cursor);
-    assert!(r.is_err());
-    let err = r.err().unwrap();
-    assert!(matches!(err, Error::DuplicateError{..}));
+    assert!(r.is_ok());
+    let tss = r.unwrap();
+    assert_eq!(tss.suites.len(), 1);
+    let ts = &tss.suites[0];
+    assert_eq!(ts.cases.len(), 2);
+    let tc = &ts.cases[0];
+    assert_eq!(tc.name, "foo");
+    let tc = &ts.cases[1];
+    assert_eq!(tc.name, "foo");
 }
 
 #[test]
@@ -616,15 +627,15 @@ fn test_large_test_suite() {
     assert!(r.is_ok());
     let tss = r.unwrap();
     assert_eq!(tss.suites.len(), 1);
-    let ts = tss.suites.get("").unwrap();
+    let ts = &tss.suites[0];
     assert_eq!(ts.cases.len(), 3);
-    let tc = ts.cases.get("foo1::ASuccessfulTest").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.original_name, "ASuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("foo2::AnotherSuccessfulTest").unwrap();
+    let tc = &ts.cases[1];
     assert_eq!(tc.original_name, "AnotherSuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("foo3::AFailingTest").unwrap();
+    let tc = &ts.cases[2];
     assert_eq!(tc.original_name, "AFailingTest");
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
@@ -656,15 +667,15 @@ fn test_large_test_suites() {
     assert!(r.is_ok());
     let tss = r.unwrap();
     assert_eq!(tss.suites.len(), 2);
-    let ts = tss.suites.get("foo").unwrap();
+    let ts = &tss.suites[0];
     assert_eq!(ts.cases.len(), 3);
-    let tc = ts.cases.get("foo1::ASuccessfulTest").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.original_name, "ASuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("foo2::AnotherSuccessfulTest").unwrap();
+    let tc = &ts.cases[1];
     assert_eq!(tc.original_name, "AnotherSuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("foo3::AFailingTest").unwrap();
+    let tc = &ts.cases[2];
     assert_eq!(tc.original_name, "AFailingTest");
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
@@ -672,15 +683,15 @@ fn test_large_test_suites() {
     assert_eq!(tf.message, "");
     assert_eq!(tf.text, "details about failure");
 
-    let ts = tss.suites.get("bar").unwrap();
+    let ts = &tss.suites[1];
     assert_eq!(ts.cases.len(), 3);
-    let tc = ts.cases.get("bar1::ASuccessfulTest").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.original_name, "ASuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("bar2::AnotherSuccessfulTest").unwrap();
+    let tc = &ts.cases[1];
     assert_eq!(tc.original_name, "AnotherSuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("bar3::AFailingTest").unwrap();
+    let tc = &ts.cases[2];
     assert_eq!(tc.original_name, "AFailingTest");
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
@@ -729,18 +740,18 @@ fn test_large_test_suites_added_tags() {
     assert!(r.is_ok());
     let tss = r.unwrap();
     assert_eq!(tss.suites.len(), 1);
-    let ts = tss.suites.get("foo").unwrap();
+    let ts = &tss.suites[0];
     assert_eq!(ts.cases.len(), 5);
 
-    let tc = ts.cases.get("foo1::ASuccessfulTest").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.original_name, "ASuccessfulTest");
     assert!(tc.status.is_success());
 
-    let tc = ts.cases.get("foo2::AnotherSuccessfulTest").unwrap();
+    let tc = &ts.cases[1];
     assert_eq!(tc.original_name, "AnotherSuccessfulTest");
     assert!(tc.status.is_success());
 
-    let tc = ts.cases.get("foo3::AFailingTest").unwrap();
+    let tc = &ts.cases[2];
     assert_eq!(tc.original_name, "AFailingTest");
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
@@ -749,7 +760,7 @@ fn test_large_test_suites_added_tags() {
     println!("{:?}", tf.text);
     assert_eq!(tf.text, "details about failure");
 
-    let tc = ts.cases.get("foo4::ATestOnError").unwrap();
+    let tc = &ts.cases[3];
     assert_eq!(tc.original_name, "ATestOnError");
     assert!(tc.status.is_error());
     let tf = tc.status.error_as_ref();
@@ -757,7 +768,7 @@ fn test_large_test_suites_added_tags() {
     assert_eq!(tf.message, "");
     assert_eq!(tf.text, "setup failure");
 
-    let tc = ts.cases.get("foo5::ASkippedTest").unwrap();
+    let tc = &ts.cases[4];
     assert_eq!(tc.original_name, "ASkippedTest");
     assert!(tc.status.is_skipped());
     let tf = tc.status.skipped_as_ref();
@@ -806,18 +817,18 @@ fn test_large_test_suites_with_comments() {
     assert!(r.is_ok());
     let tss = r.unwrap();
     assert_eq!(tss.suites.len(), 1);
-    let ts = tss.suites.get("foo").unwrap();
+    let ts = &tss.suites[0];
     assert_eq!(ts.cases.len(), 5);
 
-    let tc = ts.cases.get("foo1::ASuccessfulTest").unwrap();
+    let tc = &ts.cases[0];
     assert_eq!(tc.original_name, "ASuccessfulTest");
     assert!(tc.status.is_success());
 
-    let tc = ts.cases.get("foo2::AnotherSuccessfulTest").unwrap();
+    let tc = &ts.cases[1];
     assert_eq!(tc.original_name, "AnotherSuccessfulTest");
     assert!(tc.status.is_success());
 
-    let tc = ts.cases.get("foo3::AFailingTest").unwrap();
+    let tc = &ts.cases[2];
     assert_eq!(tc.original_name, "AFailingTest");
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
@@ -826,7 +837,7 @@ fn test_large_test_suites_with_comments() {
     println!("{:?}", tf.text);
     assert_eq!(tf.text, "details about failure");
 
-    let tc = ts.cases.get("foo4::ATestOnError").unwrap();
+    let tc = &ts.cases[3];
     assert_eq!(tc.original_name, "ATestOnError");
     assert!(tc.status.is_error());
     let tf = tc.status.error_as_ref();
@@ -834,7 +845,7 @@ fn test_large_test_suites_with_comments() {
     assert_eq!(tf.message, "");
     assert_eq!(tf.text, "setup failure");
 
-    let tc = ts.cases.get("foo5::ASkippedTest").unwrap();
+    let tc = &ts.cases[4];
     assert_eq!(tc.original_name, "ASkippedTest");
     assert!(tc.status.is_skipped());
     let tf = tc.status.skipped_as_ref();

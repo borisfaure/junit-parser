@@ -8,9 +8,9 @@ use quick_xml::events::Event as XMLEvent;
 use quick_xml::Error as XMLError;
 use quick_xml::Reader as XMLReader;
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::io::prelude::*;
 use std::str;
+use std::vec::Vec;
 
 #[derive(Debug, Clone)]
 /// Value from a `<failure />` tag
@@ -372,7 +372,7 @@ impl TestCase {
 #[derive(Debug)]
 /// A test suite, containing test cases [`TestCase`](struct.TestCase.html)
 pub struct TestSuite {
-    pub cases: HashMap<String, TestCase>,
+    pub cases: Vec<TestCase>,
     /// How long the test suite took to run, from the `time` attribute
     pub time: f64,
     /// Number of tests in the test suite, from the `tests` attribute
@@ -389,7 +389,7 @@ pub struct TestSuite {
 impl TestSuite {
     fn new() -> Self {
         Self {
-            cases: HashMap::new(),
+            cases: Vec::new(),
             time: 0f64,
             tests: 0u64,
             errors: 0u64,
@@ -431,24 +431,10 @@ impl TestSuite {
             match r.read_event(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == b"testsuite" => break,
                 Ok(XMLEvent::Start(ref e)) if e.name() == b"testcase" => {
-                    let testcase = TestCase::new_from_reader(e, r)?;
-                    if ts.cases.contains_key(&testcase.name) {
-                        return Err(Error::DuplicateError {
-                            kind: "testcase".to_string(),
-                            name: testcase.name,
-                        });
-                    }
-                    ts.cases.insert(testcase.name.clone(), testcase);
+                    ts.cases.push(TestCase::new_from_reader(e, r)?);
                 }
                 Ok(XMLEvent::Empty(ref e)) if e.name() == b"testcase" => {
-                    let testcase = TestCase::new_empty(e)?;
-                    if ts.cases.contains_key(&testcase.name) {
-                        return Err(Error::DuplicateError {
-                            kind: "testcase".to_string(),
-                            name: testcase.name,
-                        });
-                    }
-                    ts.cases.insert(testcase.name.clone(), testcase);
+                    ts.cases.push(TestCase::new_empty(e)?);
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("testsuite".to_string()).into())
@@ -465,7 +451,7 @@ impl TestSuite {
 #[derive(Debug)]
 /// Struct representing a JUnit report, containing test suites [`TestSuite`](struct.TestSuite.html)
 pub struct TestSuites {
-    pub suites: HashMap<String, TestSuite>,
+    pub suites: Vec<TestSuite>,
     /// How long the test suites took to run, from the `time` attribute
     pub time: f64,
     /// Number of tests in the test suites, from the `tests` attribute
@@ -482,7 +468,7 @@ pub struct TestSuites {
 impl TestSuites {
     fn new() -> Self {
         Self {
-            suites: HashMap::new(),
+            suites: Vec::new(),
             time: 0f64,
             tests: 0u64,
             errors: 0u64,
@@ -525,24 +511,10 @@ impl TestSuites {
             match r.read_event(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == b"testsuites" => break,
                 Ok(XMLEvent::Start(ref e)) if e.name() == b"testsuite" => {
-                    let suite = TestSuite::new_from_reader(e, r)?;
-                    if ts.suites.contains_key(&suite.name) {
-                        return Err(Error::DuplicateError {
-                            kind: "testsuite".to_string(),
-                            name: suite.name,
-                        });
-                    }
-                    ts.suites.insert(suite.name.clone(), suite);
+                    ts.suites.push(TestSuite::new_from_reader(e, r)?);
                 }
                 Ok(XMLEvent::Empty(ref e)) if e.name() == b"testsuite" => {
-                    let suite = TestSuite::new_empty(e)?;
-                    if ts.suites.contains_key(&suite.name) {
-                        return Err(Error::DuplicateError {
-                            kind: "testsuite".to_string(),
-                            name: suite.name,
-                        });
-                    }
-                    ts.suites.insert(suite.name.clone(), suite);
+                    ts.suites.push(TestSuite::new_empty(e)?);
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("testsuites".to_string()).into())
@@ -634,13 +606,13 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
             Ok(XMLEvent::Empty(ref e)) if e.name() == b"testsuite" => {
                 let ts = TestSuite::new_empty(e)?;
                 let mut suites = TestSuites::new();
-                suites.suites.insert(ts.name.clone(), ts);
+                suites.suites.push(ts);
                 return Ok(suites);
             }
             Ok(XMLEvent::Start(ref e)) if e.name() == b"testsuite" => {
                 let ts = TestSuite::new_from_reader(e, &mut r)?;
                 let mut suites = TestSuites::new();
-                suites.suites.insert(ts.name.clone(), ts);
+                suites.suites.push(ts);
                 return Ok(suites);
             }
             Ok(XMLEvent::Eof) => {
