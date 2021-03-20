@@ -279,9 +279,15 @@ pub struct TestCase {
     /// How long the test case took to run, from the `time` attribute
     pub time: f64,
     /// Name of the test case, from the `name` attribute
+    /// If there is a `classname` attribute, store it as `classname::name`
+    /// See `original_name` for the original name
     pub name: String,
     /// Status of the test case
     pub status: TestStatus,
+    /// Original name, from the `name` attribute
+    pub original_name: String,
+    /// Class name, from the `classname` attribute
+    pub classname: Option<String>,
 }
 impl TestCase {
     fn new() -> Self {
@@ -289,6 +295,8 @@ impl TestCase {
             time: 0f64,
             name: String::new(),
             status: TestStatus::Success,
+            original_name: String::new(),
+            classname: None,
         }
     }
     fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
@@ -296,9 +304,15 @@ impl TestCase {
             let a = a?;
             match a.key {
                 b"time" => self.time = try_from_attribute_value_f64(a.value)?,
-                b"name" => self.name = try_from_attribute_value_string(a.value)?,
+                b"name" => self.original_name = try_from_attribute_value_string(a.value)?,
+                b"classname" => self.classname = Some(try_from_attribute_value_string(a.value)?),
                 _ => {}
             };
+        }
+        if let Some(cn) = self.classname.as_ref() {
+            self.name = format!("{}::{}", cn, self.original_name);
+        } else {
+            self.name = self.original_name.clone();
         }
         Ok(())
     }

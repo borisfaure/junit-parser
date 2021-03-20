@@ -618,14 +618,14 @@ fn test_large_test_suite() {
     assert_eq!(tss.suites.len(), 1);
     let ts = tss.suites.get("").unwrap();
     assert_eq!(ts.cases.len(), 3);
-    let tc = ts.cases.get("ASuccessfulTest").unwrap();
-    assert_eq!(tc.name, "ASuccessfulTest");
+    let tc = ts.cases.get("foo1::ASuccessfulTest").unwrap();
+    assert_eq!(tc.original_name, "ASuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("AnotherSuccessfulTest").unwrap();
-    assert_eq!(tc.name, "AnotherSuccessfulTest");
+    let tc = ts.cases.get("foo2::AnotherSuccessfulTest").unwrap();
+    assert_eq!(tc.original_name, "AnotherSuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("AFailingTest").unwrap();
-    assert_eq!(tc.name, "AFailingTest");
+    let tc = ts.cases.get("foo3::AFailingTest").unwrap();
+    assert_eq!(tc.original_name, "AFailingTest");
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
     assert_eq!(tf.failure_type, "NotEnoughFoo");
@@ -658,14 +658,14 @@ fn test_large_test_suites() {
     assert_eq!(tss.suites.len(), 2);
     let ts = tss.suites.get("foo").unwrap();
     assert_eq!(ts.cases.len(), 3);
-    let tc = ts.cases.get("ASuccessfulTest").unwrap();
-    assert_eq!(tc.name, "ASuccessfulTest");
+    let tc = ts.cases.get("foo1::ASuccessfulTest").unwrap();
+    assert_eq!(tc.original_name, "ASuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("AnotherSuccessfulTest").unwrap();
-    assert_eq!(tc.name, "AnotherSuccessfulTest");
+    let tc = ts.cases.get("foo2::AnotherSuccessfulTest").unwrap();
+    assert_eq!(tc.original_name, "AnotherSuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("AFailingTest").unwrap();
-    assert_eq!(tc.name, "AFailingTest");
+    let tc = ts.cases.get("foo3::AFailingTest").unwrap();
+    assert_eq!(tc.original_name, "AFailingTest");
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
     assert_eq!(tf.failure_type, "NotEnoughFoo");
@@ -674,14 +674,14 @@ fn test_large_test_suites() {
 
     let ts = tss.suites.get("bar").unwrap();
     assert_eq!(ts.cases.len(), 3);
-    let tc = ts.cases.get("ASuccessfulTest").unwrap();
-    assert_eq!(tc.name, "ASuccessfulTest");
+    let tc = ts.cases.get("bar1::ASuccessfulTest").unwrap();
+    assert_eq!(tc.original_name, "ASuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("AnotherSuccessfulTest").unwrap();
-    assert_eq!(tc.name, "AnotherSuccessfulTest");
+    let tc = ts.cases.get("bar2::AnotherSuccessfulTest").unwrap();
+    assert_eq!(tc.original_name, "AnotherSuccessfulTest");
     assert!(tc.status.is_success());
-    let tc = ts.cases.get("AFailingTest").unwrap();
-    assert_eq!(tc.name, "AFailingTest");
+    let tc = ts.cases.get("bar3::AFailingTest").unwrap();
+    assert_eq!(tc.original_name, "AFailingTest");
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
     assert_eq!(tf.failure_type, "NotEnoughBar");
@@ -732,16 +732,16 @@ fn test_large_test_suites_added_tags() {
     let ts = tss.suites.get("foo").unwrap();
     assert_eq!(ts.cases.len(), 5);
 
-    let tc = ts.cases.get("ASuccessfulTest").unwrap();
-    assert_eq!(tc.name, "ASuccessfulTest");
+    let tc = ts.cases.get("foo1::ASuccessfulTest").unwrap();
+    assert_eq!(tc.original_name, "ASuccessfulTest");
     assert!(tc.status.is_success());
 
-    let tc = ts.cases.get("AnotherSuccessfulTest").unwrap();
-    assert_eq!(tc.name, "AnotherSuccessfulTest");
+    let tc = ts.cases.get("foo2::AnotherSuccessfulTest").unwrap();
+    assert_eq!(tc.original_name, "AnotherSuccessfulTest");
     assert!(tc.status.is_success());
 
-    let tc = ts.cases.get("AFailingTest").unwrap();
-    assert_eq!(tc.name, "AFailingTest");
+    let tc = ts.cases.get("foo3::AFailingTest").unwrap();
+    assert_eq!(tc.original_name, "AFailingTest");
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
     assert_eq!(tf.failure_type, "NotEnoughFoo");
@@ -749,16 +749,16 @@ fn test_large_test_suites_added_tags() {
     println!("{:?}", tf.text);
     assert_eq!(tf.text, "details about failure");
 
-    let tc = ts.cases.get("ATestOnError").unwrap();
-    assert_eq!(tc.name, "ATestOnError");
+    let tc = ts.cases.get("foo4::ATestOnError").unwrap();
+    assert_eq!(tc.original_name, "ATestOnError");
     assert!(tc.status.is_error());
     let tf = tc.status.error_as_ref();
     assert_eq!(tf.error_type, "Setup");
     assert_eq!(tf.message, "");
     assert_eq!(tf.text, "setup failure");
 
-    let tc = ts.cases.get("ASkippedTest").unwrap();
-    assert_eq!(tc.name, "ASkippedTest");
+    let tc = ts.cases.get("foo5::ASkippedTest").unwrap();
+    assert_eq!(tc.original_name, "ASkippedTest");
     assert!(tc.status.is_skipped());
     let tf = tc.status.skipped_as_ref();
     assert_eq!(tf.skipped_type, "skip");
@@ -809,16 +809,16 @@ fn test_large_test_suites_with_comments() {
     let ts = tss.suites.get("foo").unwrap();
     assert_eq!(ts.cases.len(), 5);
 
-    let tc = ts.cases.get("ASuccessfulTest").unwrap();
-    assert_eq!(tc.name, "ASuccessfulTest");
+    let tc = ts.cases.get("foo1::ASuccessfulTest").unwrap();
+    assert_eq!(tc.original_name, "ASuccessfulTest");
     assert!(tc.status.is_success());
 
-    let tc = ts.cases.get("AnotherSuccessfulTest").unwrap();
-    assert_eq!(tc.name, "AnotherSuccessfulTest");
+    let tc = ts.cases.get("foo2::AnotherSuccessfulTest").unwrap();
+    assert_eq!(tc.original_name, "AnotherSuccessfulTest");
     assert!(tc.status.is_success());
 
-    let tc = ts.cases.get("AFailingTest").unwrap();
-    assert_eq!(tc.name, "AFailingTest");
+    let tc = ts.cases.get("foo3::AFailingTest").unwrap();
+    assert_eq!(tc.original_name, "AFailingTest");
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
     assert_eq!(tf.failure_type, "NotEnoughFoo");
@@ -826,16 +826,16 @@ fn test_large_test_suites_with_comments() {
     println!("{:?}", tf.text);
     assert_eq!(tf.text, "details about failure");
 
-    let tc = ts.cases.get("ATestOnError").unwrap();
-    assert_eq!(tc.name, "ATestOnError");
+    let tc = ts.cases.get("foo4::ATestOnError").unwrap();
+    assert_eq!(tc.original_name, "ATestOnError");
     assert!(tc.status.is_error());
     let tf = tc.status.error_as_ref();
     assert_eq!(tf.error_type, "Setup");
     assert_eq!(tf.message, "");
     assert_eq!(tf.text, "setup failure");
 
-    let tc = ts.cases.get("ASkippedTest").unwrap();
-    assert_eq!(tc.name, "ASkippedTest");
+    let tc = ts.cases.get("foo5::ASkippedTest").unwrap();
+    assert_eq!(tc.original_name, "ASkippedTest");
     assert!(tc.status.is_skipped());
     let tf = tc.status.skipped_as_ref();
     assert_eq!(tf.skipped_type, "skip");
