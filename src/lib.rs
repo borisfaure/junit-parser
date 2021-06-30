@@ -235,7 +235,7 @@ impl TestStatus {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// A test case
 pub struct TestCase {
     /// How long the test case took to run, from the `time` attribute
@@ -330,7 +330,7 @@ impl TestCase {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// A test suite, containing test cases [`TestCase`](struct.TestCase.html)
 pub struct TestSuite {
     /// List of status of tests represented by [`TestCase`]
@@ -407,7 +407,7 @@ impl TestSuite {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Struct representing a JUnit report, containing test suites [`TestSuite`](struct.TestSuite.html)
 pub struct TestSuites {
     /// List of tests suites represented by [`TestSuite`]
