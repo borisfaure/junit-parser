@@ -532,14 +532,14 @@ fn try_from_attribute_value_f64<'a>(value: Cow<'a, [u8]>) -> Result<f64, Error> 
     match value {
         Cow::Borrowed(b) => {
             let s = str::from_utf8(b)?;
-            if s.len() == 0 {
+            if s.is_empty() {
                 return Ok(0f64);
             }
             Ok(s.parse::<f64>()?)
         }
         Cow::Owned(ref b) => {
             let s = str::from_utf8(b)?;
-            if s.len() == 0 {
+            if s.is_empty() {
                 return Ok(0f64);
             }
             Ok(s.parse::<f64>()?)
@@ -551,14 +551,14 @@ fn try_from_attribute_value_u64<'a>(value: Cow<'a, [u8]>) -> Result<u64, Error> 
     match value {
         Cow::Borrowed(b) => {
             let s = str::from_utf8(b)?;
-            if s.len() == 0 {
+            if s.is_empty() {
                 return Ok(0u64);
             }
             Ok(s.parse::<u64>()?)
         }
         Cow::Owned(ref b) => {
             let s = str::from_utf8(b)?;
-            if s.len() == 0 {
+            if s.is_empty() {
                 return Ok(0u64);
             }
             Ok(s.parse::<u64>()?)
