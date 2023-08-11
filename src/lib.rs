@@ -30,7 +30,7 @@ impl TestFailure {
             failure_type: String::new(),
         }
     }
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
+    fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -42,7 +42,7 @@ impl TestFailure {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
+    fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut tf = Self::new();
         tf.parse_attributes(e)?;
         Ok(tf)
@@ -91,7 +91,7 @@ impl TestError {
             error_type: String::new(),
         }
     }
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
+    fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -103,7 +103,7 @@ impl TestError {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
+    fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut te = Self::new();
         te.parse_attributes(e)?;
         Ok(te)
@@ -152,7 +152,7 @@ impl TestSkipped {
             skipped_type: String::new(),
         }
     }
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
+    fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -164,16 +164,13 @@ impl TestSkipped {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
+    fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         Ok(ts)
     }
 
-    fn new_from_reader<'a, B: BufRead>(
-        e: &'a XMLBytesStart,
-        r: &mut XMLReader<B>,
-    ) -> Result<Self, Error> {
+    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -227,7 +224,7 @@ impl TestStatus {
     /// # Panics
     ///
     /// Panics if the value is not an [`Errror(_)`](#variant.Error)
-    pub fn error_as_ref<'a>(&'a self) -> &'a TestError {
+    pub fn error_as_ref(&self) -> &TestError {
         if let TestStatus::Error(ref e) = self {
             return e;
         }
@@ -246,7 +243,7 @@ impl TestStatus {
     /// # Panics
     ///
     /// Panics if the value is not a [`Failure(_)`](#variant.Failure)
-    pub fn failure_as_ref<'a>(&'a self) -> &'a TestFailure {
+    pub fn failure_as_ref(&self) -> &TestFailure {
         if let TestStatus::Failure(ref e) = self {
             return e;
         }
@@ -265,7 +262,7 @@ impl TestStatus {
     /// # Panics
     ///
     /// Panics if the value is not a [`Skipped(_)`](#variant.Skipped)
-    pub fn skipped_as_ref<'a>(&'a self) -> &'a TestSkipped {
+    pub fn skipped_as_ref(&self) -> &TestSkipped {
         if let TestStatus::Skipped(ref e) = self {
             return e;
         }
@@ -299,7 +296,7 @@ impl TestCase {
             classname: None,
         }
     }
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
+    fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -317,7 +314,7 @@ impl TestCase {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
+    fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut tc = Self::new();
         tc.parse_attributes(e)?;
         Ok(tc)
@@ -398,7 +395,7 @@ impl TestSuite {
             name: String::new(),
         }
     }
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
+    fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -414,16 +411,13 @@ impl TestSuite {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
+    fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         Ok(ts)
     }
 
-    fn new_from_reader<'a, B: BufRead>(
-        e: &'a XMLBytesStart,
-        r: &mut XMLReader<B>,
-    ) -> Result<Self, Error> {
+    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -478,7 +472,7 @@ impl TestSuites {
         }
     }
 
-    fn parse_attributes<'a>(&mut self, e: &'a XMLBytesStart) -> Result<(), Error> {
+    fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
             match a.key {
@@ -494,16 +488,13 @@ impl TestSuites {
         Ok(())
     }
 
-    fn new_empty<'a>(e: &'a XMLBytesStart) -> Result<Self, Error> {
+    fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         Ok(ts)
     }
 
-    fn new_from_reader<'a, B: BufRead>(
-        e: &'a XMLBytesStart,
-        r: &mut XMLReader<B>,
-    ) -> Result<Self, Error> {
+    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::new();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -528,7 +519,7 @@ impl TestSuites {
     }
 }
 
-fn try_from_attribute_value_f64<'a>(value: Cow<'a, [u8]>) -> Result<f64, Error> {
+fn try_from_attribute_value_f64(value: Cow<[u8]>) -> Result<f64, Error> {
     match value {
         Cow::Borrowed(b) => {
             let s = str::from_utf8(b)?;
@@ -547,7 +538,7 @@ fn try_from_attribute_value_f64<'a>(value: Cow<'a, [u8]>) -> Result<f64, Error> 
     }
 }
 
-fn try_from_attribute_value_u64<'a>(value: Cow<'a, [u8]>) -> Result<u64, Error> {
+fn try_from_attribute_value_u64(value: Cow<[u8]>) -> Result<u64, Error> {
     match value {
         Cow::Borrowed(b) => {
             let s = str::from_utf8(b)?;
@@ -566,7 +557,7 @@ fn try_from_attribute_value_u64<'a>(value: Cow<'a, [u8]>) -> Result<u64, Error> 
     }
 }
 
-fn try_from_attribute_value_string<'a>(value: Cow<'a, [u8]>) -> Result<String, Error> {
+fn try_from_attribute_value_string(value: Cow<[u8]>) -> Result<String, Error> {
     match value {
         Cow::Borrowed(b) => Ok(str::from_utf8(b)?.to_owned()),
         Cow::Owned(ref b) => Ok(str::from_utf8(b)?.to_owned()),
