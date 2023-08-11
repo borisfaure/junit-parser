@@ -207,17 +207,11 @@ pub enum TestStatus {
 impl TestStatus {
     /// Returns `true` if the `TestStatus` is [`Success`](#variant.Success).
     pub fn is_success(&self) -> bool {
-        match self {
-            TestStatus::Success => true,
-            _ => false,
-        }
+        matches!(self, TestStatus::Success)
     }
     /// Returns `true` if the `TestStatus` is [`Error(_)`](#variant.Error).
     pub fn is_error(&self) -> bool {
-        match self {
-            TestStatus::Error(_) => true,
-            _ => false,
-        }
+        matches!(self, TestStatus::Error(_))
     }
     /// Returns the contained [`Error(_)`](#variant.Error) value as a reference
     ///
@@ -233,11 +227,9 @@ impl TestStatus {
 
     /// Returns `true` if the `TestStatus` is [`Failure(_)`](#variant.Failure).
     pub fn is_failure(&self) -> bool {
-        match self {
-            TestStatus::Failure(_) => true,
-            _ => false,
-        }
+        matches!(self, TestStatus::Failure(_))
     }
+
     /// Returns the contained [`Failure(_)`](#variant.Failure) value as a reference
     ///
     /// # Panics
@@ -252,11 +244,9 @@ impl TestStatus {
 
     /// Returns `true` if the `TestStatus` is [`Skipped(_)`](#variant.Skipped).
     pub fn is_skipped(&self) -> bool {
-        match self {
-            TestStatus::Skipped(_) => true,
-            _ => false,
-        }
+        matches!(self, TestStatus::Skipped(_))
     }
+
     /// Returns the contained [`Skipped(_)`](#variant.Skipped) value as a reference
     ///
     /// # Panics
