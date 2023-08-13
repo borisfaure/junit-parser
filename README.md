@@ -1,7 +1,7 @@
 ![CI](https://github.com/borisfaure/junit-parser/actions/workflows/ci.yml/badge.svg)
 [![Crates.io](https://img.shields.io/crates/v/junit-parser.svg)](https://crates.io/crates/junit-parser)
 [![Docs](https://docs.rs/junit_parser/badge.svg)](https://docs.rs/junit_parser/)
-[![License](https://img.shields.io/badge/license-BSD-2-Clause-green.sv)](LICENSE.txt)
+[![License](https://img.shields.io/badge/license-BSD--2--Clause-green.svg)](LICENSE.txt)
 
 # JUnit-Parser
 
