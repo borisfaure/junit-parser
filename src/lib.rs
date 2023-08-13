@@ -12,7 +12,7 @@ use std::io::prelude::*;
 use std::str;
 use std::vec::Vec;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// Value from a `<failure />` tag
 pub struct TestFailure {
     /// The `message` attribute
@@ -23,13 +23,6 @@ pub struct TestFailure {
     pub failure_type: String,
 }
 impl TestFailure {
-    pub fn new() -> Self {
-        Self {
-            message: String::new(),
-            text: String::new(),
-            failure_type: String::new(),
-        }
-    }
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -43,13 +36,13 @@ impl TestFailure {
     }
 
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
-        let mut tf = Self::new();
+        let mut tf = Self::default();
         tf.parse_attributes(e)?;
         Ok(tf)
     }
 
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
-        let mut tf = Self::new();
+        let mut tf = Self::default();
         tf.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
@@ -70,7 +63,7 @@ impl TestFailure {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// Value from an `<error />` tag
 pub struct TestError {
     /// The `message` attribute
@@ -81,13 +74,6 @@ pub struct TestError {
     pub error_type: String,
 }
 impl TestError {
-    pub fn new() -> Self {
-        Self {
-            message: String::new(),
-            text: String::new(),
-            error_type: String::new(),
-        }
-    }
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -101,13 +87,13 @@ impl TestError {
     }
 
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
-        let mut te = Self::new();
+        let mut te = Self::default();
         te.parse_attributes(e)?;
         Ok(te)
     }
 
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
-        let mut te = Self::new();
+        let mut te = Self::default();
         te.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
@@ -128,7 +114,7 @@ impl TestError {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// Value from a `<skipped />` tag
 pub struct TestSkipped {
     /// The `message` attribute
@@ -139,13 +125,6 @@ pub struct TestSkipped {
     pub skipped_type: String,
 }
 impl TestSkipped {
-    pub fn new() -> Self {
-        Self {
-            message: String::new(),
-            text: String::new(),
-            skipped_type: String::new(),
-        }
-    }
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -159,13 +138,13 @@ impl TestSkipped {
     }
 
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
-        let mut ts = Self::new();
+        let mut ts = Self::default();
         ts.parse_attributes(e)?;
         Ok(ts)
     }
 
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
-        let mut ts = Self::new();
+        let mut ts = Self::default();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
