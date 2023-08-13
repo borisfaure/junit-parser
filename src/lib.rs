@@ -48,10 +48,7 @@ impl TestFailure {
         Ok(tf)
     }
 
-    fn new_from_reader<'a, B: BufRead>(
-        e: &'a XMLBytesStart,
-        r: &mut XMLReader<B>,
-    ) -> Result<Self, Error> {
+    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut tf = Self::new();
         tf.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -109,10 +106,7 @@ impl TestError {
         Ok(te)
     }
 
-    fn new_from_reader<'a, B: BufRead>(
-        e: &'a XMLBytesStart,
-        r: &mut XMLReader<B>,
-    ) -> Result<Self, Error> {
+    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut te = Self::new();
         te.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -310,10 +304,7 @@ impl TestCase {
         Ok(tc)
     }
 
-    fn new_from_reader<'a, B: BufRead>(
-        e: &'a XMLBytesStart,
-        r: &mut XMLReader<B>,
-    ) -> Result<Self, Error> {
+    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut tc = Self::new();
         tc.parse_attributes(e)?;
         let mut buf = Vec::new();
