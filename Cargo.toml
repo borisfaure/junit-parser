@@ -13,3 +13,4 @@ documentation = "https://docs.rs/junit-parser/"
 
 [dependencies]
 quick-xml = "0.22"
+thiserror = "1.0"
