@@ -1,3 +1,4 @@
+#![warn(missing_docs)]
 //! Library to parse JUnit XML files
 
 mod errors;
@@ -329,6 +330,7 @@ impl TestCase {
 #[derive(Debug)]
 /// A test suite, containing test cases [`TestCase`](struct.TestCase.html)
 pub struct TestSuite {
+    /// List of status of tests represented by [`TestCase`]
     pub cases: Vec<TestCase>,
     /// How long the test suite took to run, from the `time` attribute
     pub time: f64,
@@ -405,6 +407,7 @@ impl TestSuite {
 #[derive(Debug)]
 /// Struct representing a JUnit report, containing test suites [`TestSuite`](struct.TestSuite.html)
 pub struct TestSuites {
+    /// List of tests suites represented by [`TestSuite`]
     pub suites: Vec<TestSuite>,
     /// How long the test suites took to run, from the `time` attribute
     pub time: f64,
