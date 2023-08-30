@@ -1,3 +1,4 @@
+#![warn(missing_docs)]
 use thiserror::Error;
 
 /// Error enumerates all possible errors returned by this library.
