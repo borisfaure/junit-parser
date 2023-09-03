@@ -6,6 +6,7 @@ mod errors;
 pub use errors::Error;
 use quick_xml::events::BytesStart as XMLBytesStart;
 use quick_xml::events::Event as XMLEvent;
+use quick_xml::name::QName;
 use quick_xml::Error as XMLError;
 use quick_xml::Reader as XMLReader;
 use std::borrow::Cow;
@@ -28,8 +29,8 @@ impl TestFailure {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                b"type" => self.failure_type = try_from_attribute_value_string(a.value)?,
-                b"message" => self.message = try_from_attribute_value_string(a.value)?,
+                QName(b"type") => self.failure_type = try_from_attribute_value_string(a.value)?,
+                QName(b"message") => self.message = try_from_attribute_value_string(a.value)?,
                 _ => {}
             };
         }
@@ -48,7 +49,7 @@ impl TestFailure {
         let mut buf = Vec::new();
         loop {
             match r.read_event(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == b"failure" => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"failure") => break,
                 Ok(XMLEvent::Text(e)) => {
                     tf.text = e.unescape_and_decode(r)?.trim().to_string();
                 }
@@ -79,8 +80,8 @@ impl TestError {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                b"type" => self.error_type = try_from_attribute_value_string(a.value)?,
-                b"message" => self.message = try_from_attribute_value_string(a.value)?,
+                QName(b"type") => self.error_type = try_from_attribute_value_string(a.value)?,
+                QName(b"message") => self.message = try_from_attribute_value_string(a.value)?,
                 _ => {}
             };
         }
@@ -99,7 +100,7 @@ impl TestError {
         let mut buf = Vec::new();
         loop {
             match r.read_event(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == b"error" => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"error") => break,
                 Ok(XMLEvent::Text(e)) => {
                     te.text = e.unescape_and_decode(r)?.trim().to_string();
                 }
@@ -130,8 +131,8 @@ impl TestSkipped {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                b"type" => self.skipped_type = try_from_attribute_value_string(a.value)?,
-                b"message" => self.message = try_from_attribute_value_string(a.value)?,
+                QName(b"type") => self.skipped_type = try_from_attribute_value_string(a.value)?,
+                QName(b"message") => self.message = try_from_attribute_value_string(a.value)?,
                 _ => {}
             };
         }
@@ -150,7 +151,7 @@ impl TestSkipped {
         let mut buf = Vec::new();
         loop {
             match r.read_event(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == b"skipped" => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"skipped") => break,
                 Ok(XMLEvent::Text(e)) => {
                     ts.text = e.unescape_and_decode(r)?.trim().to_string();
                 }
@@ -264,9 +265,11 @@ impl TestCase {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                b"time" => self.time = try_from_attribute_value_f64(a.value)?,
-                b"name" => self.original_name = try_from_attribute_value_string(a.value)?,
-                b"classname" => self.classname = Some(try_from_attribute_value_string(a.value)?),
+                QName(b"time") => self.time = try_from_attribute_value_f64(a.value)?,
+                QName(b"name") => self.original_name = try_from_attribute_value_string(a.value)?,
+                QName(b"classname") => {
+                    self.classname = Some(try_from_attribute_value_string(a.value)?)
+                }
                 _ => {}
             };
         }
@@ -290,28 +293,28 @@ impl TestCase {
         let mut buf = Vec::new();
         loop {
             match r.read_event(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == b"testcase" => break,
-                Ok(XMLEvent::Start(ref e)) if e.name() == b"skipped" => {
+                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testcase") => break,
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"skipped") => {
                     let ts = TestSkipped::new_from_reader(e, r)?;
                     tc.status = TestStatus::Skipped(ts);
                 }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == b"skipped" => {
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"skipped") => {
                     let ts = TestSkipped::new_empty(e)?;
                     tc.status = TestStatus::Skipped(ts);
                 }
-                Ok(XMLEvent::Start(ref e)) if e.name() == b"failure" => {
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"failure") => {
                     let tf = TestFailure::new_from_reader(e, r)?;
                     tc.status = TestStatus::Failure(tf);
                 }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == b"failure" => {
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"failure") => {
                     let tf = TestFailure::new_empty(e)?;
                     tc.status = TestStatus::Failure(tf);
                 }
-                Ok(XMLEvent::Start(ref e)) if e.name() == b"error" => {
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"error") => {
                     let te = TestError::new_from_reader(e, r)?;
                     tc.status = TestStatus::Error(te);
                 }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == b"error" => {
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"error") => {
                     let te = TestError::new_empty(e)?;
                     tc.status = TestStatus::Error(te);
                 }
@@ -361,12 +364,12 @@ impl TestSuite {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                b"time" => self.time = try_from_attribute_value_f64(a.value)?,
-                b"tests" => self.tests = try_from_attribute_value_u64(a.value)?,
-                b"errors" => self.errors = try_from_attribute_value_u64(a.value)?,
-                b"failures" => self.failures = try_from_attribute_value_u64(a.value)?,
-                b"skipped" => self.skipped = try_from_attribute_value_u64(a.value)?,
-                b"name" => self.name = try_from_attribute_value_string(a.value)?,
+                QName(b"time") => self.time = try_from_attribute_value_f64(a.value)?,
+                QName(b"tests") => self.tests = try_from_attribute_value_u64(a.value)?,
+                QName(b"errors") => self.errors = try_from_attribute_value_u64(a.value)?,
+                QName(b"failures") => self.failures = try_from_attribute_value_u64(a.value)?,
+                QName(b"skipped") => self.skipped = try_from_attribute_value_u64(a.value)?,
+                QName(b"name") => self.name = try_from_attribute_value_string(a.value)?,
                 _ => {}
             };
         }
@@ -385,11 +388,11 @@ impl TestSuite {
         let mut buf = Vec::new();
         loop {
             match r.read_event(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == b"testsuite" => break,
-                Ok(XMLEvent::Start(ref e)) if e.name() == b"testcase" => {
+                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuite") => break,
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testcase") => {
                     ts.cases.push(TestCase::new_from_reader(e, r)?);
                 }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == b"testcase" => {
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testcase") => {
                     ts.cases.push(TestCase::new_empty(e)?);
                 }
                 Ok(XMLEvent::Eof) => {
@@ -439,12 +442,12 @@ impl TestSuites {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                b"time" => self.time = try_from_attribute_value_f64(a.value)?,
-                b"tests" => self.tests = try_from_attribute_value_u64(a.value)?,
-                b"errors" => self.errors = try_from_attribute_value_u64(a.value)?,
-                b"failures" => self.failures = try_from_attribute_value_u64(a.value)?,
-                b"skipped" => self.skipped = try_from_attribute_value_u64(a.value)?,
-                b"name" => self.name = try_from_attribute_value_string(a.value)?,
+                QName(b"time") => self.time = try_from_attribute_value_f64(a.value)?,
+                QName(b"tests") => self.tests = try_from_attribute_value_u64(a.value)?,
+                QName(b"errors") => self.errors = try_from_attribute_value_u64(a.value)?,
+                QName(b"failures") => self.failures = try_from_attribute_value_u64(a.value)?,
+                QName(b"skipped") => self.skipped = try_from_attribute_value_u64(a.value)?,
+                QName(b"name") => self.name = try_from_attribute_value_string(a.value)?,
                 _ => {}
             };
         }
@@ -463,11 +466,11 @@ impl TestSuites {
         let mut buf = Vec::new();
         loop {
             match r.read_event(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == b"testsuites" => break,
-                Ok(XMLEvent::Start(ref e)) if e.name() == b"testsuite" => {
+                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuites") => break,
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
                     ts.suites.push(TestSuite::new_from_reader(e, r)?);
                 }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == b"testsuite" => {
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuite") => {
                     ts.suites.push(TestSuite::new_empty(e)?);
                 }
                 Ok(XMLEvent::Eof) => {
@@ -551,19 +554,19 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
     let mut buf = Vec::new();
     loop {
         match r.read_event(&mut buf) {
-            Ok(XMLEvent::Empty(ref e)) if e.name() == b"testsuites" => {
+            Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuites") => {
                 return TestSuites::new_empty(e);
             }
-            Ok(XMLEvent::Start(ref e)) if e.name() == b"testsuites" => {
+            Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuites") => {
                 return TestSuites::new_from_reader(e, &mut r);
             }
-            Ok(XMLEvent::Empty(ref e)) if e.name() == b"testsuite" => {
+            Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuite") => {
                 let ts = TestSuite::new_empty(e)?;
                 let mut suites = TestSuites::new();
                 suites.suites.push(ts);
                 return Ok(suites);
             }
-            Ok(XMLEvent::Start(ref e)) if e.name() == b"testsuite" => {
+            Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
                 let ts = TestSuite::new_from_reader(e, &mut r)?;
                 let mut suites = TestSuites::new();
                 suites.suites.push(ts);

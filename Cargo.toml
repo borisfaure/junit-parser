@@ -12,5 +12,5 @@ repository = "https://github.com/borisfaure/junit-parser"
 documentation = "https://docs.rs/junit-parser/"
 
 [dependencies]
-quick-xml = "0.22"
+quick-xml = "0.30"
 thiserror = "1.0"
