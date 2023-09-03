@@ -51,7 +51,7 @@ impl TestFailure {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"failure") => break,
                 Ok(XMLEvent::Text(e)) => {
-                    tf.text = e.unescape_and_decode(r)?.trim().to_string();
+                    tf.text = e.unescape()?.trim().to_string();
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("failure".to_string()).into())
@@ -102,7 +102,7 @@ impl TestError {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"error") => break,
                 Ok(XMLEvent::Text(e)) => {
-                    te.text = e.unescape_and_decode(r)?.trim().to_string();
+                    te.text = e.unescape()?.trim().to_string();
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("error".to_string()).into())
@@ -153,7 +153,7 @@ impl TestSkipped {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"skipped") => break,
                 Ok(XMLEvent::Text(e)) => {
-                    ts.text = e.unescape_and_decode(r)?.trim().to_string();
+                    ts.text = e.unescape()?.trim().to_string();
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("skipped".to_string()).into())
