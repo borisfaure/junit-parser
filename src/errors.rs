@@ -17,3 +17,10 @@ pub enum Error {
     #[error("Error while converting bytes to Utf8")]
     ParseUt8Error(#[from] std::str::Utf8Error),
 }
+
+impl From<::quick_xml::events::attributes::AttrError> for Error {
+    #[inline]
+    fn from(err: ::quick_xml::events::attributes::AttrError) -> Error {
+        Error::XMLError(err.into())
+    }
+}
