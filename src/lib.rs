@@ -48,7 +48,7 @@ impl TestFailure {
         tf.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
-            match r.read_event(&mut buf) {
+            match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"failure") => break,
                 Ok(XMLEvent::Text(e)) => {
                     tf.text = e.unescape_and_decode(r)?.trim().to_string();
@@ -99,7 +99,7 @@ impl TestError {
         te.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
-            match r.read_event(&mut buf) {
+            match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"error") => break,
                 Ok(XMLEvent::Text(e)) => {
                     te.text = e.unescape_and_decode(r)?.trim().to_string();
@@ -150,7 +150,7 @@ impl TestSkipped {
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
-            match r.read_event(&mut buf) {
+            match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"skipped") => break,
                 Ok(XMLEvent::Text(e)) => {
                     ts.text = e.unescape_and_decode(r)?.trim().to_string();
@@ -292,7 +292,7 @@ impl TestCase {
         tc.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
-            match r.read_event(&mut buf) {
+            match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testcase") => break,
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"skipped") => {
                     let ts = TestSkipped::new_from_reader(e, r)?;
@@ -387,7 +387,7 @@ impl TestSuite {
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
-            match r.read_event(&mut buf) {
+            match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuite") => break,
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testcase") => {
                     ts.cases.push(TestCase::new_from_reader(e, r)?);
@@ -465,7 +465,7 @@ impl TestSuites {
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
-            match r.read_event(&mut buf) {
+            match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuites") => break,
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
                     ts.suites.push(TestSuite::new_from_reader(e, r)?);
@@ -553,7 +553,7 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
     let mut r = XMLReader::from_reader(reader);
     let mut buf = Vec::new();
     loop {
-        match r.read_event(&mut buf) {
+        match r.read_event_into(&mut buf) {
             Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuites") => {
                 return TestSuites::new_empty(e);
             }
