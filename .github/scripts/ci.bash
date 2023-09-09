@@ -4,9 +4,19 @@ set -e
 set -x
 set -u
 
+declare -A FEATURES
+FEATURES=(
+    [0]="serde"
+)
+
 run_doc() {
     rustup component add rust-docs
+    cargo doc --no-default-features
     cargo doc
+    for FEATURE in "${FEATURES[@]}"
+    do
+        cargo doc --no-default-features --features "$FEATURE"
+    done
 }
 
 run_fmt() {
@@ -16,23 +26,48 @@ run_fmt() {
 
 run_clippy() {
     rustup component add clippy-preview
-    cargo clippy  -- -D warnings
+    cargo clippy --no-default-features  -- -D warnings
+    cargo clippy -- -D warnings
+    for FEATURE in "${FEATURES[@]}"
+    do
+        cargo clippy --no-default-features --features "$FEATURE" -- -D warnings
+    done
 }
 
 run_check() {
+    cargo check --no-default-features
     cargo check
+    for FEATURE in "${FEATURES[@]}"
+    do
+        cargo check --no-default-features --features "$FEATURE"
+    done
 }
 
 run_test() {
+    cargo test --no-default-features
     cargo test
+    for FEATURE in "${FEATURES[@]}"
+    do
+        cargo test --no-default-features --features "$FEATURE"
+    done
 }
 
 run_build() {
+    cargo build  --no-default-features
     cargo build
+    for FEATURE in "${FEATURES[@]}"
+    do
+        cargo build  --no-default-features --features "$FEATURE"
+    done
 }
 
 run_build_release() {
+    cargo build --release --no-default-features
     cargo build --release
+    for FEATURE in "${FEATURES[@]}"
+    do
+        cargo build --release --no-default-features --features "$FEATURE"
+    done
 }
 
 case $1 in
