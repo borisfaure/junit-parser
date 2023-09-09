@@ -14,6 +14,7 @@ use std::io::prelude::*;
 use std::str;
 use std::vec::Vec;
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Default)]
 /// Value from a `<failure />` tag
 pub struct TestFailure {
@@ -65,6 +66,7 @@ impl TestFailure {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Default)]
 /// Value from an `<error />` tag
 pub struct TestError {
@@ -116,6 +118,7 @@ impl TestError {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Default)]
 /// Value from a `<skipped />` tag
 pub struct TestSkipped {
@@ -167,6 +170,7 @@ impl TestSkipped {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone)]
 /// Status of a test case
 pub enum TestStatus {
@@ -235,6 +239,7 @@ impl TestStatus {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone)]
 /// A test case
 pub struct TestCase {
@@ -330,6 +335,7 @@ impl TestCase {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone)]
 /// A test suite, containing test cases [`TestCase`](struct.TestCase.html)
 pub struct TestSuite {
@@ -407,6 +413,7 @@ impl TestSuite {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone)]
 /// Struct representing a JUnit report, containing test suites [`TestSuite`](struct.TestSuite.html)
 pub struct TestSuites {
