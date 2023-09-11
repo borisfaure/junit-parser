@@ -16,6 +16,6 @@ serde = ["dep:serde"]
 default = []
 
 [dependencies]
-quick-xml = "0.30"
+quick-xml = { version="0.30", features = ["escape-html"]}
 thiserror = "1.0"
 serde = { version = "1.0", features = ["derive"], optional = true }
