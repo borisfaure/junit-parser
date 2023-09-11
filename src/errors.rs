@@ -24,3 +24,10 @@ impl From<::quick_xml::events::attributes::AttrError> for Error {
         Error::XMLError(err.into())
     }
 }
+
+impl From<::quick_xml::escape::EscapeError> for Error {
+    #[inline]
+    fn from(err: ::quick_xml::escape::EscapeError) -> Error {
+        Error::XMLError(err.into())
+    }
+}

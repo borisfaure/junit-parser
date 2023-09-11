@@ -4,6 +4,7 @@
 mod errors;
 
 pub use errors::Error;
+use quick_xml::escape::unescape;
 use quick_xml::events::BytesStart as XMLBytesStart;
 use quick_xml::events::Event as XMLEvent;
 use quick_xml::name::QName;
@@ -531,9 +532,13 @@ fn try_from_attribute_value_u64(value: Cow<[u8]>) -> Result<u64, Error> {
 }
 
 fn try_from_attribute_value_string(value: Cow<[u8]>) -> Result<String, Error> {
-    match value {
-        Cow::Borrowed(b) => Ok(str::from_utf8(b)?.to_owned()),
-        Cow::Owned(ref b) => Ok(str::from_utf8(b)?.to_owned()),
+    let s = match value {
+        Cow::Borrowed(b) => str::from_utf8(b)?,
+        Cow::Owned(ref b) => str::from_utf8(b)?,
+    };
+    match unescape(s)? {
+        Cow::Borrowed(u) => Ok(u.to_owned()),
+        Cow::Owned(ref u) => Ok(u.to_owned()),
     }
 }
 

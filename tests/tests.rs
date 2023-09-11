@@ -33,6 +33,7 @@ fn empty_test_suites() {
     assert_eq!(t.name, "");
     assert_eq!(t.suites.len(), 0);
 }
+
 #[test]
 fn empty_test_suites_empty_attributes() {
     let xml = r#"<testsuites
@@ -117,6 +118,7 @@ fn empty_test_suite() {
     let t = &t.suites[0];
     assert_eq!(t.cases.len(), 0);
 }
+
 #[test]
 fn empty_test_suite_empty_attributes() {
     let xml = r#"<testsuites><testsuite
@@ -309,6 +311,7 @@ fn test_case_success() {
     assert_eq!(tc.name, "bar");
     assert!(tc.status.is_success());
 }
+
 #[test]
 fn test_case_success_stdout() {
     let xml = r#"<testsuite name="foo" tests="1" time="30.23" >
@@ -852,4 +855,50 @@ fn test_large_test_suites_with_comments() {
     assert_eq!(tf.skipped_type, "skip");
     assert_eq!(tf.message, "");
     assert_eq!(tf.text, "details about being skipped");
+}
+
+#[test]
+fn test_attr_unescaped() {
+    let xml = r#"<testsuites tests="1" name="&lt;suites&gt;">
+<testsuite name="&lt;suite&gt;" tests="1">
+  <testcase classname="&lt;class&gt;" name="&lt;name&gt;"/>
+  <testcase classname="&lt;class&gt;" name="&lt;AFailingTest&gt;">
+    <failure type="&lt;NotEnoughFoo&gt;">
+      details about failure
+    </failure>
+  </testcase>
+  <testcase classname="&lt;class&gt;" name="&lt;ATestOnError&gt;">
+    <error type="&lt;Setup&gt;">
+      setup failure
+    </error>
+  </testcase>
+  <testcase classname="&lt;class&gt;" name="&lt;ASkippedTest&gt;">
+    <skipped type="&lt;skip&gt;">
+      details about being skipped
+    </skipped>
+  </testcase>
+</testsuite>
+</testsuites>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let t = r.unwrap();
+    assert_eq!(t.name, "<suites>");
+    assert_eq!(t.suites.len(), 1);
+    let ts = &t.suites[0];
+    assert_eq!(ts.cases.len(), 4);
+    let tc = &ts.cases[0];
+    assert_eq!(tc.name, "<class>::<name>");
+    let tc = &ts.cases[1];
+    assert_eq!(tc.name, "<class>::<AFailingTest>");
+    let te = tc.status.failure_as_ref();
+    assert_eq!(te.failure_type, "<NotEnoughFoo>");
+    let tc = &ts.cases[2];
+    assert_eq!(tc.name, "<class>::<ATestOnError>");
+    let te = tc.status.error_as_ref();
+    assert_eq!(te.error_type, "<Setup>");
+    let tc = &ts.cases[3];
+    assert_eq!(tc.name, "<class>::<ASkippedTest>");
+    let te = tc.status.skipped_as_ref();
+    assert_eq!(te.skipped_type, "<skip>");
 }
