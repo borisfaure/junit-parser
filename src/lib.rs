@@ -256,6 +256,10 @@ pub struct TestCase {
     pub original_name: String,
     /// Class name, from the `classname` attribute
     pub classname: Option<String>,
+    /// stdout output
+    pub system_out: Option<String>,
+    /// stderr output
+    pub system_err: Option<String>,
 }
 impl TestCase {
     fn new() -> Self {
@@ -265,6 +269,8 @@ impl TestCase {
             status: TestStatus::Success,
             original_name: String::new(),
             classname: None,
+            system_out: None,
+            system_err: None,
         }
     }
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
@@ -324,6 +330,12 @@ impl TestCase {
                     let te = TestError::new_empty(e)?;
                     tc.status = TestStatus::Error(te);
                 }
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-out") => {
+                    tc.system_out = parse_system(e, r)?;
+                }
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-err") => {
+                    tc.system_err = parse_system(e, r)?;
+                }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("testcase".to_string()).into())
                 }
@@ -354,6 +366,10 @@ pub struct TestSuite {
     pub skipped: u64,
     /// Name of the test suite, from the `name` attribute
     pub name: String,
+    /// stdout output
+    pub system_out: Option<String>,
+    /// stderr output
+    pub system_err: Option<String>,
 }
 impl TestSuite {
     fn new() -> Self {
@@ -365,6 +381,8 @@ impl TestSuite {
             failures: 0u64,
             skipped: 0u64,
             name: String::new(),
+            system_out: None,
+            system_err: None,
         }
     }
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
@@ -401,6 +419,12 @@ impl TestSuite {
                 }
                 Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testcase") => {
                     ts.cases.push(TestCase::new_empty(e)?);
+                }
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-out") => {
+                    ts.system_out = parse_system(e, r)?;
+                }
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-err") => {
+                    ts.system_err = parse_system(e, r)?;
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("testsuite".to_string()).into())
@@ -540,6 +564,30 @@ fn try_from_attribute_value_string(value: Cow<[u8]>) -> Result<String, Error> {
         Cow::Borrowed(u) => Ok(u.to_owned()),
         Cow::Owned(ref u) => Ok(u.to_owned()),
     }
+}
+
+/// Parse a chunk of xml as system-out or system-err
+fn parse_system<B: BufRead>(
+    orig: &XMLBytesStart,
+    r: &mut XMLReader<B>,
+) -> Result<Option<String>, Error> {
+    let mut buf = Vec::new();
+    let mut res = None;
+    loop {
+        match r.read_event_into(&mut buf) {
+            Ok(XMLEvent::End(ref e)) if e.name() == orig.name() => break,
+            Ok(XMLEvent::Text(e)) => {
+                res = Some(e.unescape()?.to_string());
+            }
+            Ok(XMLEvent::Eof) => {
+                return Err(XMLError::UnexpectedEof(format!("{:?}", orig.name())).into());
+            }
+            Err(err) => return Err(err.into()),
+            _ => (),
+        }
+    }
+    buf.clear();
+    Ok(res)
 }
 
 /// Creates a [`TestSuites`](struct.TestSuites.html) structure from a JUnit XML data read from `reader`

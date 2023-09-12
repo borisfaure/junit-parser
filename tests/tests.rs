@@ -316,7 +316,7 @@ fn test_case_success() {
 fn test_case_success_stdout() {
     let xml = r#"<testsuite name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" >
-    <sys-out>Hi :)</sys-out>
+    <system-out>Hi :)</system-out>
     </testcase>
             </testsuite>"#;
     let cursor = Cursor::new(xml);
@@ -901,4 +901,84 @@ fn test_attr_unescaped() {
     assert_eq!(tc.name, "<class>::<ASkippedTest>");
     let te = tc.status.skipped_as_ref();
     assert_eq!(te.skipped_type, "<skip>");
+}
+
+#[test]
+/// Testing parsing system-out/err
+/// Ensure whitespace is kept
+fn test_system_out_err() {
+    let xml = r#"
+    <testsuite name="foo" tests="1" time="30.23">
+      <testcase name="bar" time="12.34" >
+        <system-out>
+  tc-out
+  tc-out
+        </system-out>
+        <system-err>
+  tc-err
+  tc-err
+        </system-err>
+      </testcase>
+      <system-out>
+  ts-out
+  ts-out
+      </system-out>
+      <system-err>
+  ts-err
+  ts-err
+      </system-err>
+    </testsuite>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let t = r.unwrap();
+    assert_eq!(t.suites.len(), 1);
+    let ts = &t.suites[0];
+    assert!(ts.system_out.is_some());
+    assert_eq!(
+        ts.system_out,
+        Some(
+            r#"
+  ts-out
+  ts-out
+      "#
+            .to_string()
+        )
+    );
+    assert!(ts.system_err.is_some());
+    assert_eq!(
+        ts.system_err,
+        Some(
+            r#"
+  ts-err
+  ts-err
+      "#
+            .to_string()
+        )
+    );
+    assert_eq!(ts.cases.len(), 1);
+    let tc = &ts.cases[0];
+    assert!(tc.system_out.is_some());
+    assert!(tc.system_out.is_some());
+    assert_eq!(
+        tc.system_out,
+        Some(
+            r#"
+  tc-out
+  tc-out
+        "#
+            .to_string()
+        )
+    );
+    assert!(tc.system_err.is_some());
+    assert_eq!(
+        tc.system_err,
+        Some(
+            r#"
+  tc-err
+  tc-err
+        "#
+            .to_string()
+        )
+    );
 }
