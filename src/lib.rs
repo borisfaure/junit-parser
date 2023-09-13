@@ -172,10 +172,11 @@ impl TestSkipped {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// Status of a test case
 pub enum TestStatus {
     /// Success
+    #[default]
     Success,
     /// Test case has a `<error />` tag
     Error(TestError),
@@ -241,7 +242,7 @@ impl TestStatus {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// A test case
 pub struct TestCase {
     /// How long the test case took to run, from the `time` attribute
@@ -262,17 +263,6 @@ pub struct TestCase {
     pub system_err: Option<String>,
 }
 impl TestCase {
-    fn new() -> Self {
-        Self {
-            time: 0f64,
-            name: String::new(),
-            status: TestStatus::Success,
-            original_name: String::new(),
-            classname: None,
-            system_out: None,
-            system_err: None,
-        }
-    }
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -294,13 +284,13 @@ impl TestCase {
     }
 
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
-        let mut tc = Self::new();
+        let mut tc = Self::default();
         tc.parse_attributes(e)?;
         Ok(tc)
     }
 
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
-        let mut tc = Self::new();
+        let mut tc = Self::default();
         tc.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
@@ -349,7 +339,7 @@ impl TestCase {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// A test suite, containing test cases [`TestCase`](struct.TestCase.html)
 pub struct TestSuite {
     /// List of status of tests represented by [`TestCase`]
@@ -372,19 +362,6 @@ pub struct TestSuite {
     pub system_err: Option<String>,
 }
 impl TestSuite {
-    fn new() -> Self {
-        Self {
-            cases: Vec::new(),
-            time: 0f64,
-            tests: 0u64,
-            errors: 0u64,
-            failures: 0u64,
-            skipped: 0u64,
-            name: String::new(),
-            system_out: None,
-            system_err: None,
-        }
-    }
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -402,13 +379,13 @@ impl TestSuite {
     }
 
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
-        let mut ts = Self::new();
+        let mut ts = Self::default();
         ts.parse_attributes(e)?;
         Ok(ts)
     }
 
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
-        let mut ts = Self::new();
+        let mut ts = Self::default();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
@@ -439,7 +416,7 @@ impl TestSuite {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 /// Struct representing a JUnit report, containing test suites [`TestSuite`](struct.TestSuite.html)
 pub struct TestSuites {
     /// List of tests suites represented by [`TestSuite`]
@@ -458,18 +435,6 @@ pub struct TestSuites {
     pub name: String,
 }
 impl TestSuites {
-    fn new() -> Self {
-        Self {
-            suites: Vec::new(),
-            time: 0f64,
-            tests: 0u64,
-            errors: 0u64,
-            failures: 0u64,
-            skipped: 0u64,
-            name: String::new(),
-        }
-    }
-
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -487,13 +452,13 @@ impl TestSuites {
     }
 
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
-        let mut ts = Self::new();
+        let mut ts = Self::default();
         ts.parse_attributes(e)?;
         Ok(ts)
     }
 
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
-        let mut ts = Self::new();
+        let mut ts = Self::default();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
@@ -608,7 +573,6 @@ fn parse_system<B: BufRead>(
 ///     let r = junit_parser::from_reader(cursor);
 ///     assert!(r.is_ok());
 /// ```
-
 pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
     let mut r = XMLReader::from_reader(reader);
     let mut buf = Vec::new();
@@ -622,13 +586,13 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
             }
             Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuite") => {
                 let ts = TestSuite::new_empty(e)?;
-                let mut suites = TestSuites::new();
+                let mut suites = TestSuites::default();
                 suites.suites.push(ts);
                 return Ok(suites);
             }
             Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
                 let ts = TestSuite::new_from_reader(e, &mut r)?;
-                let mut suites = TestSuites::new();
+                let mut suites = TestSuites::default();
                 suites.suites.push(ts);
                 return Ok(suites);
             }
