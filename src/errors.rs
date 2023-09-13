@@ -20,6 +20,7 @@ pub enum Error {
 
 impl From<::quick_xml::events::attributes::AttrError> for Error {
     #[inline]
+    /// Convert [`::quick_xml::events::attributes`] into [`Error::XMLError`]
     fn from(err: ::quick_xml::events::attributes::AttrError) -> Error {
         Error::XMLError(err.into())
     }
@@ -27,6 +28,7 @@ impl From<::quick_xml::events::attributes::AttrError> for Error {
 
 impl From<::quick_xml::escape::EscapeError> for Error {
     #[inline]
+    /// Convert [`::quick_xml::escape::EscapeError`] into [`Error::XMLError`]
     fn from(err: ::quick_xml::escape::EscapeError) -> Error {
         Error::XMLError(err.into())
     }

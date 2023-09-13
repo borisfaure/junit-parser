@@ -1,6 +1,7 @@
 #![warn(missing_docs)]
 //! Library to parse JUnit XML files
 
+/// Errors
 mod errors;
 
 pub use errors::Error;
@@ -27,6 +28,7 @@ pub struct TestFailure {
     pub failure_type: String,
 }
 impl TestFailure {
+    /// Fill up `self` with attributes from the XML tag
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -39,12 +41,14 @@ impl TestFailure {
         Ok(())
     }
 
+    /// New [`TestFailure`] from empty XML tag
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut tf = Self::default();
         tf.parse_attributes(e)?;
         Ok(tf)
     }
 
+    /// New [`TestFailure`] from XML tree
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut tf = Self::default();
         tf.parse_attributes(e)?;
@@ -79,6 +83,7 @@ pub struct TestError {
     pub error_type: String,
 }
 impl TestError {
+    /// Fill up `self` with attributes from the XML tag
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -91,12 +96,14 @@ impl TestError {
         Ok(())
     }
 
+    /// New [`TestError`] from empty XML tag
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut te = Self::default();
         te.parse_attributes(e)?;
         Ok(te)
     }
 
+    /// New [`TestError`] from XML tree
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut te = Self::default();
         te.parse_attributes(e)?;
@@ -131,6 +138,7 @@ pub struct TestSkipped {
     pub skipped_type: String,
 }
 impl TestSkipped {
+    /// Fill up `self` with attributes from the XML tag
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -143,12 +151,14 @@ impl TestSkipped {
         Ok(())
     }
 
+    /// New [`TestSkipped`] from empty XML tag
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
         Ok(ts)
     }
 
+    /// New [`TestSkipped`] from XML tree
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
@@ -263,6 +273,7 @@ pub struct TestCase {
     pub system_err: Option<String>,
 }
 impl TestCase {
+    /// Fill up `self` with attributes from the XML tag
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -283,12 +294,14 @@ impl TestCase {
         Ok(())
     }
 
+    /// New [`TestCase`] from empty XML tag
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut tc = Self::default();
         tc.parse_attributes(e)?;
         Ok(tc)
     }
 
+    /// New [`TestCase`] from XML tree
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut tc = Self::default();
         tc.parse_attributes(e)?;
@@ -362,6 +375,7 @@ pub struct TestSuite {
     pub system_err: Option<String>,
 }
 impl TestSuite {
+    /// Fill up `self` with attributes from the XML tag
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -378,12 +392,14 @@ impl TestSuite {
         Ok(())
     }
 
+    /// New [`TestSuite`] from empty XML tag
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
         Ok(ts)
     }
 
+    /// New [`TestSuite`] from XML tree
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
@@ -435,6 +451,7 @@ pub struct TestSuites {
     pub name: String,
 }
 impl TestSuites {
+    /// Fill up `self` with attributes from the XML tag
     fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
         for a in e.attributes() {
             let a = a?;
@@ -451,12 +468,14 @@ impl TestSuites {
         Ok(())
     }
 
+    /// New [`TestSuites`] from empty XML tag
     fn new_empty(e: &XMLBytesStart) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
         Ok(ts)
     }
 
+    /// New [`TestSuites`] from XML tree
     fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
@@ -482,6 +501,7 @@ impl TestSuites {
     }
 }
 
+/// Try to decode attribute value as [`f64`]
 fn try_from_attribute_value_f64(value: Cow<[u8]>) -> Result<f64, Error> {
     match value {
         Cow::Borrowed(b) => {
@@ -501,6 +521,7 @@ fn try_from_attribute_value_f64(value: Cow<[u8]>) -> Result<f64, Error> {
     }
 }
 
+/// Try to decode attribute value as [`u64`]
 fn try_from_attribute_value_u64(value: Cow<[u8]>) -> Result<u64, Error> {
     match value {
         Cow::Borrowed(b) => {
@@ -520,6 +541,7 @@ fn try_from_attribute_value_u64(value: Cow<[u8]>) -> Result<u64, Error> {
     }
 }
 
+/// Try to decode and unescape attribute value as [`String`]
 fn try_from_attribute_value_string(value: Cow<[u8]>) -> Result<String, Error> {
     let s = match value {
         Cow::Borrowed(b) => str::from_utf8(b)?,
