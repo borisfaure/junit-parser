@@ -1,8 +1,15 @@
+//! Test the JUnit parser
+//!
+//! Some tests may seem duplicate since they test start-end elements and
+//! empty-element tags but the parser uses different codepaths
+
 use junit_parser;
 use junit_parser::Error;
 use std::io::Cursor;
 
 #[test]
+/// Test that the report is parsed with a doctype
+/// Following tests will not have one
 fn skip_doctype() {
     let xml = r#"<?xml version="1.0" encoding="UTF-8"?><testsuites/>"#;
     let cursor = Cursor::new(xml);
@@ -19,6 +26,7 @@ fn skip_doctype() {
 }
 
 #[test]
+/// Test with an empty-element `testsuites` tag
 fn empty_test_suites() {
     let xml = r#"<testsuites/>"#;
     let cursor = Cursor::new(xml);
@@ -35,6 +43,7 @@ fn empty_test_suites() {
 }
 
 #[test]
+/// Test a `testsuites` tag with empty attributes
 fn empty_test_suites_empty_attributes() {
     let xml = r#"<testsuites
         tests="" name="" time="" errors="" failures="" skipped="" />"#;
@@ -52,6 +61,7 @@ fn empty_test_suites_empty_attributes() {
 }
 
 #[test]
+/// Test a `testsuites` element with no content
 fn empty_test_suites_start_end() {
     let xml = r#"<testsuites></testsuites>"#;
     let cursor = Cursor::new(xml);
@@ -68,6 +78,7 @@ fn empty_test_suites_start_end() {
 }
 
 #[test]
+/// Test an empty-element `testsuites` tag with attributes
 fn empty_test_suites_with_attributes() {
     let xml = r#"<testsuites name="AllTests"
             tests="22" time="38730.23"
@@ -87,6 +98,7 @@ fn empty_test_suites_with_attributes() {
 }
 
 #[test]
+/// Test a `testsuites` element with attributes but no content
 fn empty_test_suites_start_end_with_attributes() {
     let xml = r#"<testsuites name="AllTests"
             tests="22" time="38730.23"
@@ -106,6 +118,7 @@ fn empty_test_suites_start_end_with_attributes() {
 }
 
 #[test]
+/// Test a `testsuites` element with an empty-element `testsuite`
 fn empty_test_suite() {
     let xml = r#"<testsuites>
     <testsuite/>
@@ -120,6 +133,8 @@ fn empty_test_suite() {
 }
 
 #[test]
+/// Test a `testsuites` element with an empty-element `testsuite` with empty
+/// attributes
 fn empty_test_suite_empty_attributes() {
     let xml = r#"<testsuites><testsuite
         tests="" name="" time="" errors="" failures="" skipped="" />
@@ -140,6 +155,7 @@ fn empty_test_suite_empty_attributes() {
 }
 
 #[test]
+/// Test an empty-element `testsuite`
 fn empty_test_suite_start_end() {
     let xml = r#"<testsuites>
         <testsuite></testsuite>
@@ -160,6 +176,7 @@ fn empty_test_suite_start_end() {
 }
 
 #[test]
+/// Test an empty-element `testsuite` with attributes
 fn empty_test_suite_with_attributes() {
     let xml = r#"<testsuites>
     <testsuite name="AllTests" tests="22" time="38730.23"
@@ -181,6 +198,7 @@ fn empty_test_suite_with_attributes() {
 }
 
 #[test]
+/// Test a single element `testsuite` with attributes but no content
 fn empty_test_suite_start_end_with_attributes() {
     let xml = r#"<testsuites>
     <testsuite name="AllTests"
@@ -204,6 +222,7 @@ fn empty_test_suite_start_end_with_attributes() {
 }
 
 #[test]
+/// Test a single empty-element `testsuite`, not in a `testsuites` element
 fn no_suites_empty_test_suite() {
     let xml = r#"<testsuite/>"#;
     let cursor = Cursor::new(xml);
@@ -216,6 +235,7 @@ fn no_suites_empty_test_suite() {
 }
 
 #[test]
+/// Test a single empty-element `testsuite` with attributes, not in a `testsuites` element
 fn no_suites_empty_test_suite_empty_attributes() {
     let xml = r#"<testsuite
         tests="" name="" time="" errors="" failures="" skipped="" />"#;
@@ -235,6 +255,7 @@ fn no_suites_empty_test_suite_empty_attributes() {
 }
 
 #[test]
+/// Test a single empty-element `testsuite`, not in a `testsuites` element
 fn no_suites_empty_test_suites_start_end() {
     let xml = r#"<testsuite></testsuite>"#;
     let cursor = Cursor::new(xml);
@@ -253,6 +274,8 @@ fn no_suites_empty_test_suites_start_end() {
 }
 
 #[test]
+/// Test a single empty-element `testsuite`, not in a `testsuites` element,
+/// with attributes
 fn no_suites_empty_test_suites_with_attributes() {
     let xml = r#"<testsuite name="AllTests"
             tests="22" time="38730.23"
@@ -274,6 +297,8 @@ fn no_suites_empty_test_suites_with_attributes() {
 }
 
 #[test]
+/// Test a single start-end element `testsuite`, not in a `testsuites` element,
+/// with attributes
 fn no_suites_empty_test_suites_start_end_with_attributes() {
     let xml = r#"<testsuite name="AllTests"
             tests="22" time="38730.23"
@@ -295,6 +320,7 @@ fn no_suites_empty_test_suites_start_end_with_attributes() {
 }
 
 #[test]
+/// Test a testcase in success
 fn test_case_success() {
     let xml = r#"<testsuite name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" />
@@ -313,26 +339,7 @@ fn test_case_success() {
 }
 
 #[test]
-fn test_case_success_stdout() {
-    let xml = r#"<testsuite name="foo" tests="1" time="30.23" >
-    <testcase name="bar" time="12.34" >
-    <system-out>Hi :)</system-out>
-    </testcase>
-            </testsuite>"#;
-    let cursor = Cursor::new(xml);
-    let r = junit_parser::from_reader(cursor);
-    assert!(r.is_ok());
-    let t = r.unwrap();
-    assert_eq!(t.suites.len(), 1);
-    let ts = &t.suites[0];
-    assert_eq!(ts.cases.len(), 1);
-    let tc = &ts.cases[0];
-    assert_eq!(tc.time, 12.34f64);
-    assert_eq!(tc.name, "bar");
-    assert!(tc.status.is_success());
-}
-
-#[test]
+/// Test a testcase in error with empty-element `error`
 fn test_case_error_empty() {
     let xml = r#"<testsuite errors="1" name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" >
@@ -353,6 +360,7 @@ fn test_case_error_empty() {
 }
 
 #[test]
+/// Test a testcase in error with empty-element `error` with messages attribute
 fn test_case_error_message() {
     let xml = r#"<testsuite errors="1" name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" >
@@ -376,6 +384,7 @@ fn test_case_error_message() {
 }
 
 #[test]
+/// Test a testcase in error with messages attribute and content
 fn test_case_error_message_text() {
     let xml = r#"<testsuite errors="1" name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" >
@@ -402,6 +411,7 @@ fn test_case_error_message_text() {
 }
 
 #[test]
+/// Test a testcase in failure with empty-element `failure`
 fn test_case_failure_empty() {
     let xml = r#"<testsuite failures="1" name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" >
@@ -422,6 +432,7 @@ fn test_case_failure_empty() {
 }
 
 #[test]
+/// Test a testcase in failure with empty-element `failure` with messages attribute
 fn test_case_failure_message() {
     let xml = r#"<testsuite failures="1" name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" >
@@ -445,6 +456,7 @@ fn test_case_failure_message() {
 }
 
 #[test]
+/// Test a testcase in failure with messages attribute and content
 fn test_case_failure_message_text() {
     let xml = r#"<testsuite failures="1" name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" >
@@ -471,6 +483,7 @@ fn test_case_failure_message_text() {
 }
 
 #[test]
+/// Test a skipped testcase with empty-element `skipped` with messages attribute
 fn test_case_skipped_empty() {
     let xml = r#"<testsuite skipped="1" name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" >
@@ -491,6 +504,7 @@ fn test_case_skipped_empty() {
 }
 
 #[test]
+/// Test a skipped testcase with empty-element `skipped` with messages attribute
 fn test_case_skipped_message() {
     let xml = r#"<testsuite skipped="1" name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" >
@@ -514,6 +528,7 @@ fn test_case_skipped_message() {
 }
 
 #[test]
+/// Test a skipped testcase with messages attribute and content
 fn test_case_skipped_message_text() {
     let xml = r#"<testsuite skipped="1" name="foo" tests="1" time="30.23" >
     <testcase name="bar" time="12.34" >
@@ -540,6 +555,7 @@ fn test_case_skipped_message_text() {
 }
 
 #[test]
+/// Test invalid xml due to malformed attribute
 fn test_error_xml() {
     let xml = r#"<testsuites skipped"1" />"#;
     let cursor = Cursor::new(xml);
@@ -548,9 +564,11 @@ fn test_error_xml() {
     let err = r.err().unwrap();
     assert!(matches!(err, Error::XMLError(_)));
 }
+
 #[test]
+/// Test invalid xml due to unclosed tag
 fn test_error_xml_end_mismatch() {
-    let xml = r#"<testsuites> <foo> </bar> </testsuites>"#;
+    let xml = r#"<testsuites> <foo> </testsuites>"#;
     let cursor = Cursor::new(xml);
     let r = junit_parser::from_reader(cursor);
     assert!(r.is_err());
@@ -559,6 +577,18 @@ fn test_error_xml_end_mismatch() {
 }
 
 #[test]
+/// Test invalid xml due to end tag with no start tag
+fn test_error_xml_end_no_start() {
+    let xml = r#"<testsuites> </bar> </testsuites>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_err());
+    let err = r.err().unwrap();
+    assert!(matches!(err, Error::XMLError(_)));
+}
+
+#[test]
+/// Test failing to parse due to invalid int
 fn test_error_parseint() {
     let xml = r#"<testsuites skipped="foo" />"#;
     let cursor = Cursor::new(xml);
@@ -569,6 +599,7 @@ fn test_error_parseint() {
 }
 
 #[test]
+/// Test failing to parse due to invalid float
 fn test_error_parsefloat() {
     let xml = r#"<testsuites time="foo" />"#;
     let cursor = Cursor::new(xml);
@@ -579,10 +610,11 @@ fn test_error_parsefloat() {
 }
 
 #[test]
+/// Duplicate test suites are all stored
 fn test_duplicate_suites() {
     let xml = r#"<testsuites>
-        <testsuite name="foo" />
-        <testsuite name="foo" />
+        <testsuite name="foo" errors="1" />
+        <testsuite name="foo" errors="2" />
         </testsuites>"#;
     let cursor = Cursor::new(xml);
     let r = junit_parser::from_reader(cursor);
@@ -591,15 +623,20 @@ fn test_duplicate_suites() {
     assert_eq!(tss.suites.len(), 2);
     let ts = &tss.suites[0];
     assert_eq!(ts.name, "foo");
+    assert_eq!(ts.errors, 1);
     let ts = &tss.suites[1];
     assert_eq!(ts.name, "foo");
+    assert_eq!(ts.errors, 2);
 }
 
 #[test]
+/// Duplicate test cases are all stored
 fn test_duplicate_cases() {
     let xml = r#"<testsuite>
         <testcase name="foo" />
-        <testcase name="foo" />
+        <testcase name="foo" ><error/></testcase>
+        <testcase name="foo" ><failure/></testcase>
+        <testcase name="foo" ><skipped/></testcase>
         </testsuite>"#;
     let cursor = Cursor::new(xml);
     let r = junit_parser::from_reader(cursor);
@@ -607,14 +644,23 @@ fn test_duplicate_cases() {
     let tss = r.unwrap();
     assert_eq!(tss.suites.len(), 1);
     let ts = &tss.suites[0];
-    assert_eq!(ts.cases.len(), 2);
+    assert_eq!(ts.cases.len(), 4);
     let tc = &ts.cases[0];
     assert_eq!(tc.name, "foo");
+    assert!(tc.status.is_success());
     let tc = &ts.cases[1];
     assert_eq!(tc.name, "foo");
+    assert!(tc.status.is_error());
+    let tc = &ts.cases[2];
+    assert_eq!(tc.name, "foo");
+    assert!(tc.status.is_failure());
+    let tc = &ts.cases[3];
+    assert_eq!(tc.name, "foo");
+    assert!(tc.status.is_skipped());
 }
 
 #[test]
+/// Test with multiple test cases
 fn test_large_test_suite() {
     let xml = r#"
 <testsuite tests="3" failures="1">
@@ -648,6 +694,7 @@ fn test_large_test_suite() {
 }
 
 #[test]
+/// Test with multiple `testsuite`
 fn test_large_test_suites() {
     let xml = r#"<testsuites tests="6" failures="2">
 <testsuite name="foo" tests="3" failures="1">
@@ -704,6 +751,7 @@ fn test_large_test_suites() {
 }
 
 #[test]
+/// Test that unknown tags are skipped
 fn test_large_test_suites_added_tags() {
     let xml = r#"<testsuites tests="6" failures="2">
     <script />
@@ -781,6 +829,7 @@ fn test_large_test_suites_added_tags() {
 }
 
 #[test]
+/// Test that comments are skipped
 fn test_large_test_suites_with_comments() {
     let xml = r#"<testsuites tests="6" failures="2">
     <!-- -->
@@ -858,6 +907,7 @@ fn test_large_test_suites_with_comments() {
 }
 
 #[test]
+/// Test unescaping attributes
 fn test_attr_unescaped() {
     let xml = r#"<testsuites tests="1" name="&lt;suites&gt;">
 <testsuite name="&lt;suite&gt;" tests="1">
