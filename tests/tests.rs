@@ -660,6 +660,38 @@ fn test_duplicate_cases() {
 }
 
 #[test]
+/// Test optional TestSuite attributes
+fn test_optional_test_suite_attributes() {
+    let xml = r#"
+<testsuite
+  timestamp="2023-09-14T23:43:28+02:00"
+  hostname="mycomputer.local"
+  id="TestSuiteId"
+  package="TestPackage"
+  file="test.rs"
+  log="mylog"
+  url="test://my.test/"
+  version="3.1459"
+  >
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let tss = r.unwrap();
+    assert_eq!(tss.suites.len(), 1);
+    let ts = &tss.suites[0];
+    assert_eq!(ts.timestamp, Some("2023-09-14T23:43:28+02:00".to_string()));
+    assert_eq!(ts.hostname, Some("mycomputer.local".to_string()));
+    assert_eq!(ts.id, Some("TestSuiteId".to_string()));
+    assert_eq!(ts.package, Some("TestPackage".to_string()));
+    assert_eq!(ts.file, Some("test.rs".to_string()));
+    assert_eq!(ts.log, Some("mylog".to_string()));
+    assert_eq!(ts.url, Some("test://my.test/".to_string()));
+    assert_eq!(ts.version, Some("3.1459".to_string()));
+}
+
+#[test]
 /// Test with multiple test cases
 /// Also test parsing TestCase's attributes `classname` and `group`
 fn test_large_test_suite() {

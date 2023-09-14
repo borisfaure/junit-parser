@@ -375,6 +375,22 @@ pub struct TestSuite {
     pub skipped: u64,
     /// Name of the test suite, from the `name` attribute
     pub name: String,
+    /// Timestamp when the test suite was run, from the `timestamp` attribute
+    pub timestamp: Option<String>,
+    /// Hostname where the test suite was run, from the `hostname` attribute
+    pub hostname: Option<String>,
+    /// Identifier of the test suite, from the `id` attribute
+    pub id: Option<String>,
+    /// Package of the test suite, from the `package` attribute
+    pub package: Option<String>,
+    /// Source code file of the test suite, from the `file` attribute
+    pub file: Option<String>,
+    /// Logger of the test suite, from the `log` attribute
+    pub log: Option<String>,
+    /// URL of the test suite, from the `uri` attribute
+    pub url: Option<String>,
+    /// Version of the test suite, from the `version` attribute
+    pub version: Option<String>,
     /// stdout output from the `system-out` element
     pub system_out: Option<String>,
     /// stderr output from the `system-err` element
@@ -392,6 +408,18 @@ impl TestSuite {
                 QName(b"failures") => self.failures = try_from_attribute_value_u64(a.value)?,
                 QName(b"skipped") => self.skipped = try_from_attribute_value_u64(a.value)?,
                 QName(b"name") => self.name = try_from_attribute_value_string(a.value)?,
+                QName(b"timestamp") => {
+                    self.timestamp = Some(try_from_attribute_value_string(a.value)?)
+                }
+                QName(b"hostname") => {
+                    self.hostname = Some(try_from_attribute_value_string(a.value)?)
+                }
+                QName(b"id") => self.id = Some(try_from_attribute_value_string(a.value)?),
+                QName(b"package") => self.package = Some(try_from_attribute_value_string(a.value)?),
+                QName(b"file") => self.file = Some(try_from_attribute_value_string(a.value)?),
+                QName(b"log") => self.log = Some(try_from_attribute_value_string(a.value)?),
+                QName(b"url") => self.url = Some(try_from_attribute_value_string(a.value)?),
+                QName(b"version") => self.version = Some(try_from_attribute_value_string(a.value)?),
                 _ => {}
             };
         }
