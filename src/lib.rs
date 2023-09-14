@@ -270,9 +270,9 @@ pub struct TestCase {
     pub classname: Option<String>,
     /// Group name, from the `group` attribute
     pub group: Option<String>,
-    /// stdout output
+    /// stdout output from the `system-out` element
     pub system_out: Option<String>,
-    /// stderr output
+    /// stderr output from the `system-err` element
     pub system_err: Option<String>,
 }
 impl TestCase {
@@ -375,9 +375,9 @@ pub struct TestSuite {
     pub skipped: u64,
     /// Name of the test suite, from the `name` attribute
     pub name: String,
-    /// stdout output
+    /// stdout output from the `system-out` element
     pub system_out: Option<String>,
-    /// stderr output
+    /// stderr output from the `system-err` element
     pub system_err: Option<String>,
 }
 impl TestSuite {
