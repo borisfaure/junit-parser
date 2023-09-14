@@ -661,11 +661,12 @@ fn test_duplicate_cases() {
 
 #[test]
 /// Test with multiple test cases
+/// Also test parsing TestCase's attributes `classname` and `group`
 fn test_large_test_suite() {
     let xml = r#"
 <testsuite tests="3" failures="1">
-  <testcase classname="foo1" name="ASuccessfulTest"/>
-  <testcase classname="foo2" name="AnotherSuccessfulTest"/>
+  <testcase classname="foo1" group="gr1" name="ASuccessfulTest"/>
+  <testcase group="gr2" name="AnotherSuccessfulTest"/>
   <testcase classname="foo3" name="AFailingTest">
     <failure type="NotEnoughFoo"> details about failure </failure>
   </testcase>
@@ -680,12 +681,21 @@ fn test_large_test_suite() {
     assert_eq!(ts.cases.len(), 3);
     let tc = &ts.cases[0];
     assert_eq!(tc.original_name, "ASuccessfulTest");
+    assert_eq!(tc.classname, Some("foo1".to_string()));
+    assert_eq!(tc.name, "foo1::ASuccessfulTest");
+    assert_eq!(tc.group, Some("gr1".to_string()));
     assert!(tc.status.is_success());
     let tc = &ts.cases[1];
     assert_eq!(tc.original_name, "AnotherSuccessfulTest");
+    assert_eq!(tc.classname, None);
+    assert_eq!(tc.name, "gr2::AnotherSuccessfulTest");
+    assert_eq!(tc.group, Some("gr2".to_string()));
     assert!(tc.status.is_success());
     let tc = &ts.cases[2];
     assert_eq!(tc.original_name, "AFailingTest");
+    assert_eq!(tc.classname, Some("foo3".to_string()));
+    assert_eq!(tc.name, "foo3::AFailingTest");
+    assert_eq!(tc.group, None);
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
     assert_eq!(tf.failure_type, "NotEnoughFoo");

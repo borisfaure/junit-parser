@@ -259,7 +259,8 @@ pub struct TestCase {
     pub time: f64,
     /// Name of the test case, from the `name` attribute
     /// If there is a `classname` attribute, store it as `classname::name`
-    /// See `original_name` for the original name
+    /// Otherwise if there is a `group` attribute, store it as `group::name`
+    /// See [`TestCase::original_name`] for the original name
     pub name: String,
     /// Status of the test case
     pub status: TestStatus,
@@ -267,6 +268,8 @@ pub struct TestCase {
     pub original_name: String,
     /// Class name, from the `classname` attribute
     pub classname: Option<String>,
+    /// Group name, from the `group` attribute
+    pub group: Option<String>,
     /// stdout output
     pub system_out: Option<String>,
     /// stderr output
@@ -283,11 +286,14 @@ impl TestCase {
                 QName(b"classname") => {
                     self.classname = Some(try_from_attribute_value_string(a.value)?)
                 }
+                QName(b"group") => self.group = Some(try_from_attribute_value_string(a.value)?),
                 _ => {}
             };
         }
         if let Some(cn) = self.classname.as_ref() {
             self.name = format!("{}::{}", cn, self.original_name);
+        } else if let Some(gn) = self.group.as_ref() {
+            self.name = format!("{}::{}", gn, self.original_name);
         } else {
             self.name = self.original_name.clone();
         }
