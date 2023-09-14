@@ -16,7 +16,7 @@ Create a
 
 ```rust
 use std::io::Cursor;
-    let xml = r#"
+let xml = r#"
 <testsuite tests="3" failures="1">
   <testcase classname="foo1" name="ASuccessfulTest"/>
   <testcase classname="foo2" name="AnotherSuccessfulTest"/>
@@ -25,9 +25,9 @@ use std::io::Cursor;
   </testcase>
 </testsuite>
 "#;
-    let cursor = Cursor::new(xml);
-    let r = junit_parser::from_reader(cursor);
-    assert!(r.is_ok());
+let cursor = Cursor::new(xml);
+let r = junit_parser::from_reader(cursor);
+assert!(r.is_ok());
 ```
 
 ## License
