@@ -373,6 +373,8 @@ pub struct TestSuite {
     pub failures: u64,
     /// Number of tests skipped in the test suites, from the `skipped` attribute
     pub skipped: u64,
+    /// Number of assertions in the test suites, from the `assertions` attribute
+    pub assertions: Option<u64>,
     /// Name of the test suite, from the `name` attribute
     pub name: String,
     /// Timestamp when the test suite was run, from the `timestamp` attribute
@@ -407,6 +409,9 @@ impl TestSuite {
                 QName(b"errors") => self.errors = try_from_attribute_value_u64(a.value)?,
                 QName(b"failures") => self.failures = try_from_attribute_value_u64(a.value)?,
                 QName(b"skipped") => self.skipped = try_from_attribute_value_u64(a.value)?,
+                QName(b"assertions") => {
+                    self.assertions = Some(try_from_attribute_value_u64(a.value)?)
+                }
                 QName(b"name") => self.name = try_from_attribute_value_string(a.value)?,
                 QName(b"timestamp") => {
                     self.timestamp = Some(try_from_attribute_value_string(a.value)?)

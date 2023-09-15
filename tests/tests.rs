@@ -664,6 +664,7 @@ fn test_duplicate_cases() {
 fn test_optional_test_suite_attributes() {
     let xml = r#"
 <testsuite
+  assertions="42"
   timestamp="2023-09-14T23:43:28+02:00"
   hostname="mycomputer.local"
   id="TestSuiteId"
@@ -681,6 +682,7 @@ fn test_optional_test_suite_attributes() {
     let tss = r.unwrap();
     assert_eq!(tss.suites.len(), 1);
     let ts = &tss.suites[0];
+    assert_eq!(ts.assertions, Some(42));
     assert_eq!(ts.timestamp, Some("2023-09-14T23:43:28+02:00".to_string()));
     assert_eq!(ts.hostname, Some("mycomputer.local".to_string()));
     assert_eq!(ts.id, Some("TestSuiteId".to_string()));
