@@ -695,13 +695,15 @@ fn test_optional_test_suite_attributes() {
 
 #[test]
 /// Test with multiple test cases
-/// Also test parsing TestCase's attributes `classname` and `group`
+/// Also test parsing TestCase's attributes `classname`, `group`,
+/// `file` and `line`
 fn test_large_test_suite() {
     let xml = r#"
 <testsuite tests="3" failures="1">
   <testcase classname="foo1" group="gr1" name="ASuccessfulTest"/>
   <testcase group="gr2" name="AnotherSuccessfulTest"/>
-  <testcase classname="foo3" name="AFailingTest">
+  <testcase classname="foo3" name="AFailingTest"
+    file="foo.rs" line="63">
     <failure type="NotEnoughFoo"> details about failure </failure>
   </testcase>
 </testsuite>
@@ -730,6 +732,8 @@ fn test_large_test_suite() {
     assert_eq!(tc.classname, Some("foo3".to_string()));
     assert_eq!(tc.name, "foo3::AFailingTest");
     assert_eq!(tc.group, None);
+    assert_eq!(tc.file, Some("foo.rs".to_string()));
+    assert_eq!(tc.line, Some(63));
     assert!(tc.status.is_failure());
     let tf = tc.status.failure_as_ref();
     assert_eq!(tf.failure_type, "NotEnoughFoo");

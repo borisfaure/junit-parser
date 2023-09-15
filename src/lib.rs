@@ -270,6 +270,10 @@ pub struct TestCase {
     pub classname: Option<String>,
     /// Group name, from the `group` attribute
     pub group: Option<String>,
+    /// File source code of the test
+    pub file: Option<String>,
+    /// Related line in the source code
+    pub line: Option<u64>,
     /// stdout output from the `system-out` element
     pub system_out: Option<String>,
     /// stderr output from the `system-err` element
@@ -287,6 +291,8 @@ impl TestCase {
                     self.classname = Some(try_from_attribute_value_string(a.value)?)
                 }
                 QName(b"group") => self.group = Some(try_from_attribute_value_string(a.value)?),
+                QName(b"file") => self.file = Some(try_from_attribute_value_string(a.value)?),
+                QName(b"line") => self.line = Some(try_from_attribute_value_u64(a.value)?),
                 _ => {}
             };
         }
