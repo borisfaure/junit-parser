@@ -12,6 +12,7 @@ repository = "https://github.com/borisfaure/junit-parser"
 documentation = "https://docs.rs/junit-parser/"
 
 [features]
+# Enables `derive(serde::{Serialize,Deserialize})` on the Test* structures.
 serde = ["dep:serde"]
 default = []
 
