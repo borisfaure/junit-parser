@@ -345,9 +345,11 @@ impl TestCase {
                     let te = TestError::new_empty(e)?;
                     tc.status = TestStatus::Error(te);
                 }
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"system-out") => {}
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-out") => {
                     tc.system_out = parse_system(e, r)?;
                 }
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"system-err") => {}
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-err") => {
                     tc.system_err = parse_system(e, r)?;
                 }
@@ -458,9 +460,11 @@ impl TestSuite {
                 Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testcase") => {
                     ts.cases.push(TestCase::new_empty(e)?);
                 }
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"system-out") => {}
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-out") => {
                     ts.system_out = parse_system(e, r)?;
                 }
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"system-err") => {}
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-err") => {
                     ts.system_err = parse_system(e, r)?;
                 }

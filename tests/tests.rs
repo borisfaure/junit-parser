@@ -1080,3 +1080,39 @@ fn test_system_out_err() {
         )
     );
 }
+
+#[test]
+fn test_system_out_err_empty() {
+    let xml = r#"
+<testsuite>
+  <system-out />
+  <system-err />
+  <testcase classname="foo1" group="gr1" name="ASuccessfulTest">
+    <system-out />
+    <system-err />
+  </testcase>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    println!("{:?}", r);
+    assert!(r.is_ok());
+}
+
+#[test]
+fn test_system_out_err_no_content() {
+    let xml = r#"
+<testsuite>
+  <system-out> </system-out>
+  <system-err> </system-err>
+  <testcase classname="foo1" group="gr1" name="ASuccessfulTest">
+    <system-out> </system-out>
+    <system-err> </system-err>
+  </testcase>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    println!("{:?}", r);
+    assert!(r.is_ok());
+}
