@@ -1114,3 +1114,33 @@ fn test_system_out_err_no_content() {
     let r = junit_parser::from_reader(cursor);
     assert!(r.is_ok());
 }
+
+#[test]
+fn test_properties_empty() {
+    let xml = r#"
+<testsuite>
+  <properties />
+  <testcase name="ASuccessfulTest">
+    <properties />
+  </testcase>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+}
+
+#[test]
+fn test_properties_no_content() {
+    let xml = r#"
+<testsuite>
+  <properties> </properties>
+  <testcase name="ASuccessfulTest">
+    <properties> </properties>
+  </testcase>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+}

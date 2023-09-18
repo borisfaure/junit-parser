@@ -12,9 +12,19 @@ use quick_xml::name::QName;
 use quick_xml::Error as XMLError;
 use quick_xml::Reader as XMLReader;
 use std::borrow::Cow;
+#[cfg(feature = "properties_as_hashmap")]
+use std::collections::HashMap;
 use std::io::prelude::*;
 use std::str;
 use std::vec::Vec;
+
+/// Properties associated to a [`TestSuite`] or a [`TestCase`]
+#[derive(Debug, Clone, Default)]
+pub struct Properties {
+    /// Hashmap of the properties
+    #[cfg(feature = "properties_as_hashmap")]
+    pub hashmap: HashMap<String, String>,
+}
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Default)]
@@ -278,6 +288,8 @@ pub struct TestCase {
     pub system_out: Option<String>,
     /// stderr output from the `system-err` element
     pub system_err: Option<String>,
+    /// Properties of the test case
+    pub properties: Properties,
 }
 impl TestCase {
     /// Fill up `self` with attributes from the XML tag
@@ -405,6 +417,8 @@ pub struct TestSuite {
     pub system_out: Option<String>,
     /// stderr output from the `system-err` element
     pub system_err: Option<String>,
+    /// Properties of the test suite
+    pub properties: Properties,
 }
 impl TestSuite {
     /// Fill up `self` with attributes from the XML tag
