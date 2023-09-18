@@ -1095,7 +1095,6 @@ fn test_system_out_err_empty() {
 "#;
     let cursor = Cursor::new(xml);
     let r = junit_parser::from_reader(cursor);
-    println!("{:?}", r);
     assert!(r.is_ok());
 }
 
@@ -1113,6 +1112,5 @@ fn test_system_out_err_no_content() {
 "#;
     let cursor = Cursor::new(xml);
     let r = junit_parser::from_reader(cursor);
-    println!("{:?}", r);
     assert!(r.is_ok());
 }
