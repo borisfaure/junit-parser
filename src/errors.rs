@@ -16,6 +16,12 @@ pub enum Error {
     /// Error while converting bytes to Utf8
     #[error("Error while converting bytes to Utf8")]
     ParseUt8Error(#[from] std::str::Utf8Error),
+    /// Error parsing the `property` element: missing `name`
+    #[error("Missing `name` attribute in property")]
+    MissingPropertyName,
+    /// Error parsing the `property` element: missing `value`
+    #[error("Missing `value` attribute in property")]
+    MissingPropertyValue,
 }
 
 impl From<::quick_xml::events::attributes::AttrError> for Error {

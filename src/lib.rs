@@ -18,12 +18,68 @@ use std::io::prelude::*;
 use std::str;
 use std::vec::Vec;
 
-/// Properties associated to a [`TestSuite`] or a [`TestCase`]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Default)]
+/// Properties associated to a [`TestSuite`] or a [`TestCase`]
 pub struct Properties {
     /// Hashmap of the properties
     #[cfg(feature = "properties_as_hashmap")]
     pub hashmap: HashMap<String, String>,
+}
+
+/// Parse attributes of a `property` element
+fn parse_property(e: &XMLBytesStart) -> Result<(String, String), Error> {
+    let mut k: Option<String> = None;
+    let mut v: Option<String> = None;
+    for a in e.attributes() {
+        let a = a?;
+        match a.key {
+            QName(b"name") => k = Some(try_from_attribute_value_string(a.value)?),
+            QName(b"value") => v = Some(try_from_attribute_value_string(a.value)?),
+            _ => {}
+        };
+    }
+    match (k, v) {
+        (Some(k), Some(v)) => Ok((k, v)),
+        (Some(_), None) => Err(Error::MissingPropertyValue),
+        _ => Err(Error::MissingPropertyName),
+    }
+}
+
+impl Properties {
+    /// Create a [`Properties`] from a XML `properties` element
+    fn new_from_reader<B: BufRead>(r: &mut XMLReader<B>) -> Result<Self, Error> {
+        let p = Self::default();
+        let mut buf = Vec::new();
+        let mut expect_end_property: bool = false;
+        loop {
+            match r.read_event_into(&mut buf) {
+                Ok(XMLEvent::End(ref e))
+                    if !expect_end_property && e.name() == QName(b"properties") =>
+                {
+                    break
+                }
+                Ok(XMLEvent::End(ref e))
+                    if expect_end_property && e.name() == QName(b"property") =>
+                {
+                    expect_end_property = false;
+                }
+                Ok(XMLEvent::Start(ref e))
+                    if !expect_end_property && e.name() == QName(b"property") =>
+                {
+                    let (_k, _v) = parse_property(e)?;
+                    expect_end_property = true;
+                }
+                Ok(XMLEvent::Eof) => {
+                    return Err(XMLError::UnexpectedEof("properties".to_string()).into())
+                }
+                Err(err) => return Err(err.into()),
+                _ => (),
+            }
+        }
+        buf.clear();
+        Ok(p)
+    }
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
@@ -365,6 +421,9 @@ impl TestCase {
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-err") => {
                     tc.system_err = parse_system(e, r)?;
                 }
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"properties") => {
+                    tc.properties = Properties::new_from_reader(r)?;
+                }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("testcase".to_string()).into())
                 }
@@ -481,6 +540,9 @@ impl TestSuite {
                 Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"system-err") => {}
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-err") => {
                     ts.system_err = parse_system(e, r)?;
+                }
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"properties") => {
+                    ts.properties = Properties::new_from_reader(r)?;
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("testsuite".to_string()).into())
