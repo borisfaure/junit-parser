@@ -23,7 +23,5 @@ jobs:
         uses: actions/checkout@v4
       - name: install rust
         run: curl --proto '=https' --tlsv1.3 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
-      - name: install stm32 target
-        run: rustup target add thumbv7em-none-eabihf
       - name: act
         run: .github/scripts/ci.bash ${{ matrix.action }}
