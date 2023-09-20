@@ -1144,3 +1144,64 @@ fn test_properties_no_content() {
     let r = junit_parser::from_reader(cursor);
     assert!(r.is_ok());
 }
+
+#[cfg(feature = "properties_as_hashmap")]
+#[test]
+fn test_properties_duplicates() {
+    let xml = r#"
+<testsuite>
+  <properties>
+        <property name="language" value="english" />
+        <property name="author">
+        Me
+        </property>
+        <property name="step" value="First step" />
+        <property name="step" value="Second step" />
+  </properties>
+  <testcase name="ASuccessfulTest">
+    <properties>
+        <property name="language" value="gibberish" />
+        <property name="author">
+        John Doe
+        </property>
+        <property name="step" value="1st step" />
+        <property name="step" value="2nd step" />
+    </properties>
+  </testcase>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let t = r.unwrap();
+    assert_eq!(t.suites.len(), 1);
+    let ts = &t.suites[0];
+    assert_eq!(ts.properties.hashmap.len(), 3);
+    assert_eq!(
+        ts.properties.hashmap.get(&"language".to_string()),
+        Some(&"english".to_string())
+    );
+    assert_eq!(
+        ts.properties.hashmap.get(&"author".to_string()),
+        Some(&"Me".to_string())
+    );
+    assert_eq!(
+        ts.properties.hashmap.get(&"step".to_string()),
+        Some(&"Second step".to_string())
+    );
+    assert_eq!(ts.cases.len(), 1);
+    let tc = &ts.cases[0];
+    assert_eq!(tc.properties.hashmap.len(), 3);
+    assert_eq!(
+        tc.properties.hashmap.get(&"language".to_string()),
+        Some(&"gibberish".to_string())
+    );
+    assert_eq!(
+        tc.properties.hashmap.get(&"author".to_string()),
+        Some(&"John Doe".to_string())
+    );
+    assert_eq!(
+        tc.properties.hashmap.get(&"step".to_string()),
+        Some(&"2nd step".to_string())
+    );
+}

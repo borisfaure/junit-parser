@@ -28,7 +28,10 @@ pub struct Properties {
 }
 
 /// Parse attributes of a `property` element
-fn parse_property(e: &XMLBytesStart) -> Result<(String, String), Error> {
+fn parse_property<B: BufRead>(
+    e: &XMLBytesStart,
+    r: Option<&mut XMLReader<B>>,
+) -> Result<(String, String), Error> {
     let mut k: Option<String> = None;
     let mut v: Option<String> = None;
     for a in e.attributes() {
@@ -39,9 +42,26 @@ fn parse_property(e: &XMLBytesStart) -> Result<(String, String), Error> {
             _ => {}
         };
     }
+    if let Some(r) = r {
+        let mut buf = Vec::new();
+        loop {
+            match r.read_event_into(&mut buf) {
+                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"property") => break,
+                Ok(XMLEvent::Eof) => {
+                    return Err(XMLError::UnexpectedEof("property".to_string()).into())
+                }
+                Ok(XMLEvent::Text(e)) => {
+                    v = Some(e.unescape()?.trim().to_string());
+                }
+                Err(err) => return Err(err.into()),
+                _ => (),
+            }
+        }
+        buf.clear();
+    }
     match (k, v) {
         (Some(k), Some(v)) => Ok((k, v)),
-        (Some(_), None) => Err(Error::MissingPropertyValue),
+        (Some(k), None) => Ok((k, "".to_string())),
         _ => Err(Error::MissingPropertyName),
     }
 }
@@ -49,26 +69,19 @@ fn parse_property(e: &XMLBytesStart) -> Result<(String, String), Error> {
 impl Properties {
     /// Create a [`Properties`] from a XML `properties` element
     fn new_from_reader<B: BufRead>(r: &mut XMLReader<B>) -> Result<Self, Error> {
-        let p = Self::default();
+        let mut p = Self::default();
         let mut buf = Vec::new();
-        let mut expect_end_property: bool = false;
         loop {
             match r.read_event_into(&mut buf) {
-                Ok(XMLEvent::End(ref e))
-                    if !expect_end_property && e.name() == QName(b"properties") =>
-                {
-                    break
+                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"properties") => break,
+
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"property") => {
+                    let (k, v) = parse_property::<B>(e, None)?;
+                    p.add_property(k, v);
                 }
-                Ok(XMLEvent::End(ref e))
-                    if expect_end_property && e.name() == QName(b"property") =>
-                {
-                    expect_end_property = false;
-                }
-                Ok(XMLEvent::Start(ref e))
-                    if !expect_end_property && e.name() == QName(b"property") =>
-                {
-                    let (_k, _v) = parse_property(e)?;
-                    expect_end_property = true;
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"property") => {
+                    let (k, v) = parse_property(e, Some(r))?;
+                    p.add_property(k, v);
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("properties".to_string()).into())
@@ -79,6 +92,14 @@ impl Properties {
         }
         buf.clear();
         Ok(p)
+    }
+
+    /// Parse a `property` element
+
+    /// Add a property to the set of properties
+    fn add_property(&mut self, key: String, value: String) {
+        #[cfg(feature = "properties_as_hashmap")]
+        self.hashmap.insert(key, value);
     }
 }
 
