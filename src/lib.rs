@@ -94,8 +94,8 @@ impl Properties {
         Ok(p)
     }
 
-    /// Parse a `property` element
-
+    // `key` and `value` if no feature to store them
+    #[cfg_attr(not(feature = "properties_as_hashmap"), allow(unused_variables))]
     /// Add a property to the set of properties
     fn add_property(&mut self, key: String, value: String) {
         #[cfg(feature = "properties_as_hashmap")]
