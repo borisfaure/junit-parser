@@ -68,7 +68,7 @@ fn parse_property<B: BufRead>(
 
 impl Properties {
     /// Create a [`Properties`] from a XML `properties` element
-    fn new_from_reader<B: BufRead>(r: &mut XMLReader<B>) -> Result<Self, Error> {
+    fn from_reader<B: BufRead>(r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut p = Self::default();
         let mut buf = Vec::new();
         loop {
@@ -136,7 +136,7 @@ impl TestFailure {
     }
 
     /// New [`TestFailure`] from XML tree
-    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
+    fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut tf = Self::default();
         tf.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -191,7 +191,7 @@ impl TestError {
     }
 
     /// New [`TestError`] from XML tree
-    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
+    fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut te = Self::default();
         te.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -246,7 +246,7 @@ impl TestSkipped {
     }
 
     /// New [`TestSkipped`] from XML tree
-    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
+    fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -403,7 +403,7 @@ impl TestCase {
     }
 
     /// New [`TestCase`] from XML tree
-    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
+    fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut tc = Self::default();
         tc.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -411,7 +411,7 @@ impl TestCase {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testcase") => break,
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"skipped") => {
-                    let ts = TestSkipped::new_from_reader(e, r)?;
+                    let ts = TestSkipped::from_reader(e, r)?;
                     tc.status = TestStatus::Skipped(ts);
                 }
                 Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"skipped") => {
@@ -419,7 +419,7 @@ impl TestCase {
                     tc.status = TestStatus::Skipped(ts);
                 }
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"failure") => {
-                    let tf = TestFailure::new_from_reader(e, r)?;
+                    let tf = TestFailure::from_reader(e, r)?;
                     tc.status = TestStatus::Failure(tf);
                 }
                 Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"failure") => {
@@ -427,7 +427,7 @@ impl TestCase {
                     tc.status = TestStatus::Failure(tf);
                 }
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"error") => {
-                    let te = TestError::new_from_reader(e, r)?;
+                    let te = TestError::from_reader(e, r)?;
                     tc.status = TestStatus::Error(te);
                 }
                 Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"error") => {
@@ -443,7 +443,7 @@ impl TestCase {
                     tc.system_err = parse_system(e, r)?;
                 }
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"properties") => {
-                    tc.properties = Properties::new_from_reader(r)?;
+                    tc.properties = Properties::from_reader(r)?;
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("testcase".to_string()).into())
@@ -541,7 +541,7 @@ impl TestSuite {
     }
 
     /// New [`TestSuite`] from XML tree
-    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
+    fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -549,7 +549,7 @@ impl TestSuite {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuite") => break,
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testcase") => {
-                    ts.cases.push(TestCase::new_from_reader(e, r)?);
+                    ts.cases.push(TestCase::from_reader(e, r)?);
                 }
                 Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testcase") => {
                     ts.cases.push(TestCase::new_empty(e)?);
@@ -563,7 +563,7 @@ impl TestSuite {
                     ts.system_err = parse_system(e, r)?;
                 }
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"properties") => {
-                    ts.properties = Properties::new_from_reader(r)?;
+                    ts.properties = Properties::from_reader(r)?;
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(XMLError::UnexpectedEof("testsuite".to_string()).into())
@@ -622,7 +622,7 @@ impl TestSuites {
     }
 
     /// New [`TestSuites`] from XML tree
-    fn new_from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
+    fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
         let mut buf = Vec::new();
@@ -630,7 +630,7 @@ impl TestSuites {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuites") => break,
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
-                    ts.suites.push(TestSuite::new_from_reader(e, r)?);
+                    ts.suites.push(TestSuite::from_reader(e, r)?);
                 }
                 Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuite") => {
                     ts.suites.push(TestSuite::new_empty(e)?);
@@ -750,7 +750,7 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
                 return TestSuites::new_empty(e);
             }
             Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuites") => {
-                return TestSuites::new_from_reader(e, &mut r);
+                return TestSuites::from_reader(e, &mut r);
             }
             Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuite") => {
                 let ts = TestSuite::new_empty(e)?;
@@ -759,7 +759,7 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
                 return Ok(suites);
             }
             Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
-                let ts = TestSuite::new_from_reader(e, &mut r)?;
+                let ts = TestSuite::from_reader(e, &mut r)?;
                 let mut suites = TestSuites::default();
                 suites.suites.push(ts);
                 return Ok(suites);
