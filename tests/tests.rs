@@ -1134,15 +1134,40 @@ fn test_properties_empty() {
 fn test_properties_no_content() {
     let xml = r#"
 <testsuite>
-  <properties> </properties>
+  <properties></properties>
   <testcase name="ASuccessfulTest">
-    <properties> </properties>
+    <properties></properties>
   </testcase>
 </testsuite>
 "#;
     let cursor = Cursor::new(xml);
     let r = junit_parser::from_reader(cursor);
     assert!(r.is_ok());
+}
+
+#[test]
+fn test_property_no_name() {
+    let xml = r#"
+<testsuite>
+  <properties>
+    <property />
+  </properties>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_err());
+
+    let xml = r#"
+<testsuite>
+  <properties>
+    <property name />
+  </properties>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_err());
 }
 
 #[cfg(feature = "properties_as_hashmap")]
