@@ -7,6 +7,8 @@ set -u
 declare -A FEATURES
 FEATURES=(
     [0]="serde"
+    [1]="properties_as_hashmap"
+    [2]="properties_as_vector"
 )
 
 run_doc() {
