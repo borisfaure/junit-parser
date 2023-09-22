@@ -1,4 +1,3 @@
-#![warn(missing_docs)]
 //! Library to parse JUnit XML files
 //!
 //! # Example
@@ -28,6 +27,17 @@
 //!     assert!(ts.cases[0].status.is_success());
 //!     assert!(ts.cases[2].status.is_failure());
 //! ```
+//!
+//! # Features
+#![cfg_attr(
+    feature = "document-features",
+    cfg_attr(doc, doc = ::document_features::document_features!())
+)]
+#![forbid(unsafe_code)]
+#![deny(missing_docs)]
+// Enable feature requirements in the docs from 1.57
+// See https://stackoverflow.com/questions/61417452
+#![cfg_attr(docs_rs, feature(doc_auto_cfg))]
 
 /// Errors
 mod errors;

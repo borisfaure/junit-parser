@@ -13,15 +13,25 @@ documentation = "https://docs.rs/junit-parser/"
 rust-version = "1.56"
 
 [features]
-# Enables `derive(serde::{Serialize,Deserialize})` on the Test* structures.
-serde = ["dep:serde"]
-# Parse the `properties` element as a hashmap
-properties_as_hashmap = []
-# Parse the `properties` element as a vector
-properties_as_vector = []
 default = ["properties_as_hashmap", "properties_as_vector"]
+## Enables `derive(serde::{Serialize,Deserialize})` on the Test* structures.
+serde = ["dep:serde"]
+## Parse the `properties` element as a hashmap
+properties_as_hashmap = []
+## Parse the `properties` element as a vector
+properties_as_vector = []
+document-features = ["dep:document-features"]
+
+
+# docs.rs-specific configuration
+[package.metadata.docs.rs]
+# document all features
+all-features = true
+# defines the configuration attribute `docsrs`
+rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 quick-xml = { version="0.30", features = ["escape-html"]}
 thiserror = "1.0"
 serde = { version = "1.0", features = ["derive"], optional = true }
+document-features = { version = "0.2", optional = true }
