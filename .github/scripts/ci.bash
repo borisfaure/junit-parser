@@ -19,6 +19,7 @@ run_doc() {
     do
         cargo doc --no-default-features --features "$FEATURE"
     done
+    cargo doc --no-default-features --features="document-features,serde,properties_as_hashmap,properties_as_vector"
 }
 
 run_fmt() {
