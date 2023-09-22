@@ -14,9 +14,11 @@ documentation = "https://docs.rs/junit-parser/"
 [features]
 # Enables `derive(serde::{Serialize,Deserialize})` on the Test* structures.
 serde = ["dep:serde"]
-# Parse the `properties` element as an hashmap
+# Parse the `properties` element as a hashmap
 properties_as_hashmap = []
-default = ["properties_as_hashmap"]
+# Parse the `properties` element as a vector
+properties_as_vector = []
+default = ["properties_as_hashmap", "properties_as_vector"]
 
 [dependencies]
 quick-xml = { version="0.30", features = ["escape-html"]}

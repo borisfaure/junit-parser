@@ -25,6 +25,9 @@ pub struct Properties {
     /// Hashmap of the properties
     #[cfg(feature = "properties_as_hashmap")]
     pub hashmap: HashMap<String, String>,
+    /// Vector of the properties
+    #[cfg(feature = "properties_as_vector")]
+    pub vec: Vec<(String, String)>,
 }
 
 /// Parse attributes of a `property` element
@@ -95,11 +98,19 @@ impl Properties {
     }
 
     // `key` and `value` if no feature to store them
-    #[cfg_attr(not(feature = "properties_as_hashmap"), allow(unused_variables))]
+    #[cfg_attr(
+        all(
+            not(feature = "properties_as_hashmap"),
+            not(feature = "properties_as_vector")
+        ),
+        allow(unused_variables)
+    )]
     /// Add a property to the set of properties
     fn add_property(&mut self, key: String, value: String) {
         #[cfg(feature = "properties_as_hashmap")]
-        self.hashmap.insert(key, value);
+        self.hashmap.insert(key.clone(), value.clone());
+        #[cfg(feature = "properties_as_vector")]
+        self.vec.push((key, value));
     }
 }
 
