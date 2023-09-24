@@ -10,6 +10,7 @@ Rust library to parse JUnit XML files
 
 [Documentation](https://docs.rs/junit_parser/)
 
+
 ## Example
 
 Create a
@@ -29,7 +30,23 @@ let xml = r#"
 let cursor = Cursor::new(xml);
 let r = junit_parser::from_reader(cursor);
 assert!(r.is_ok());
+let t = r.unwrap();
+assert_eq!(t.suites.len(), 1);
+let ts = &t.suites[0];
+assert_eq!(ts.tests, 3);
+assert_eq!(ts.failures, 1);
+assert_eq!(ts.cases.len(), 3);
+assert!(ts.cases[0].status.is_success());
+assert!(ts.cases[2].status.is_failure());
 ```
+
+
+## Features
+
+- `serde` — Enables `derive(serde::{Serialize,Deserialize})` on the Test* structures.
+- `properties_as_hashmap` (enabled by default) — Parse the properties element as a hashmap
+- `properties_as_vector` (enabled by default) — Parse the properties element as a vector
+
 
 ## License
 
