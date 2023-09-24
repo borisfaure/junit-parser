@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 0.3.0 -- 2023-09-24
+## 1.0.0 -- 2023-09-24
 
  - Support only rust-1.56 or later
  - Use rust 2021 edition
