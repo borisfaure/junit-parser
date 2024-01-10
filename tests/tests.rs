@@ -1299,3 +1299,45 @@ fn test_properties_duplicates_vec() {
         ("step".to_string(), "2nd step".to_string())
     );
 }
+
+#[test]
+/// Test that test suite can have nested test suites
+fn test_sub_testsuites() {
+    let xml = r#"
+<testsuites name="mytestsuites" tests="3" failures="1">
+    <testsuite name="firstsuite">
+        <testsuite name="mygroup">
+            <testcase classname="foo1" name="a"/>
+            <testcase classname="foo2" name="b"/>
+        </testsuite>
+        <testcase classname="foo3" name="c"/>
+        <testcase classname="foo4" name="d"/>
+        <testcase classname="foo5" name="e"/>
+
+        <testsuite name="mygroup2">
+            <testcase classname="foo6" name="f"/>
+            <testcase classname="foo7" name="g"/>
+        </testsuite>
+    </testsuite>
+</testsuites>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let tss = r.unwrap();
+    assert_eq!(tss.suites.len(), 1);
+    let ts1 = &tss.suites[0];
+    assert_eq!(ts1.name, "firstsuite");
+    assert_eq!(ts1.suites.len(), 2);
+    assert_eq!(ts1.suites[0].name, "mygroup");
+    assert_eq!(ts1.suites[0].cases.len(), 2);
+    assert_eq!(ts1.suites[0].cases[0].name, "foo1::a");
+    assert_eq!(ts1.suites[0].cases[1].name, "foo2::b");
+    assert_eq!(ts1.cases.len(), 3);
+    assert_eq!(ts1.cases[0].name, "foo3::c");
+    assert_eq!(ts1.cases[1].name, "foo4::d");
+    assert_eq!(ts1.cases[2].name, "foo5::e");
+    assert_eq!(ts1.suites[1].name, "mygroup2");
+    assert_eq!(ts1.suites[1].cases[0].name, "foo6::f");
+    assert_eq!(ts1.suites[1].cases[1].name, "foo7::g");
+}

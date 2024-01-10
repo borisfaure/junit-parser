@@ -512,6 +512,8 @@ impl TestCase {
 pub struct TestSuite {
     /// List of status of tests represented by [`TestCase`]
     pub cases: Vec<TestCase>,
+    /// List of tests suites represented by [`TestSuite`]
+    pub suites: Vec<TestSuite>,
     /// How long the test suite took to run, from the `time` attribute
     pub time: f64,
     /// Number of tests in the test suite, from the `tests` attribute
@@ -597,6 +599,9 @@ impl TestSuite {
         loop {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuite") => break,
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
+                    ts.suites.push(TestSuite::from_reader(e, r)?);
+                }
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testcase") => {
                     ts.cases.push(TestCase::from_reader(e, r)?);
                 }
