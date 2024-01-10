@@ -683,6 +683,7 @@ impl TestSuites {
         loop {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuites") => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testrun") => break,
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
                     ts.suites.push(TestSuite::from_reader(e, r)?);
                 }
@@ -803,7 +804,13 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
             Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuites") => {
                 return TestSuites::new_empty(e);
             }
+            Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testrun") => {
+                return TestSuites::new_empty(e);
+            }
             Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuites") => {
+                return TestSuites::from_reader(e, &mut r);
+            }
+            Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testrun") => {
                 return TestSuites::from_reader(e, &mut r);
             }
             Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuite") => {

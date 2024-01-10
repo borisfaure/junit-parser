@@ -43,6 +43,23 @@ fn empty_test_suites() {
 }
 
 #[test]
+/// Test with an empty-element `testrun` tag
+fn empty_test_run() {
+    let xml = r#"<testrun/>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let t = r.unwrap();
+    assert_eq!(t.time, 0f64);
+    assert_eq!(t.tests, 0u64);
+    assert_eq!(t.errors, 0u64);
+    assert_eq!(t.failures, 0u64);
+    assert_eq!(t.skipped, 0u64);
+    assert_eq!(t.name, "");
+    assert_eq!(t.suites.len(), 0);
+}
+
+#[test]
 /// Test a `testsuites` tag with empty attributes
 fn empty_test_suites_empty_attributes() {
     let xml = r#"<testsuites
@@ -64,6 +81,23 @@ fn empty_test_suites_empty_attributes() {
 /// Test a `testsuites` element with no content
 fn empty_test_suites_start_end() {
     let xml = r#"<testsuites></testsuites>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let t = r.unwrap();
+    assert_eq!(t.time, 0f64);
+    assert_eq!(t.tests, 0u64);
+    assert_eq!(t.errors, 0u64);
+    assert_eq!(t.failures, 0u64);
+    assert_eq!(t.skipped, 0u64);
+    assert_eq!(t.name, "");
+    assert_eq!(t.suites.len(), 0);
+}
+
+#[test]
+/// Test a `testrun` element with no content
+fn empty_testrun_start_end() {
+    let xml = r#"<testrun></testrun>"#;
     let cursor = Cursor::new(xml);
     let r = junit_parser::from_reader(cursor);
     assert!(r.is_ok());
@@ -1400,4 +1434,30 @@ fn test_many_nested_testsuites() {
         tss.suites[0].suites[0].suites[0].suites[0].suites[0].cases[1].name,
         "foo2::b"
     );
+}
+
+#[test]
+/// Test example with a `testrun` tag
+fn test_testrun() {
+    let xml = r#"
+<testrun>
+ <testsuite tests="3" failures="1">
+   <testcase classname="foo1" name="ASuccessfulTest"/>
+   <testcase classname="foo2" name="AnotherSuccessfulTest"/>
+   <testcase classname="foo3" name="AFailingTest">
+     <failure type="NotEnoughFoo"> details about failure </failure>
+   </testcase>
+ </testsuite>
+</testrun>
+ "#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let tss = r.unwrap();
+    assert_eq!(tss.suites.len(), 1);
+    let ts = &tss.suites[0];
+    assert_eq!(ts.cases.len(), 3);
+    assert!(ts.cases[0].status.is_success());
+    assert!(ts.cases[1].status.is_success());
+    assert!(ts.cases[2].status.is_failure());
 }
