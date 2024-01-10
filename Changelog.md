@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0 -- 2024-01-10
+
+ - Support nested `testsuite` tags
+ - Support the `testrun` tag acting as `testsuites`
+ - Update quick-xml to 0.31
+
 
 ## 1.0.0 -- 2023-09-24
 
