@@ -1341,3 +1341,63 @@ fn test_sub_testsuites() {
     assert_eq!(ts1.suites[1].cases[0].name, "foo6::f");
     assert_eq!(ts1.suites[1].cases[1].name, "foo7::g");
 }
+
+#[test]
+/// Test that test suite can have nested test suites
+fn test_many_nested_testsuites() {
+    let xml = r#"
+<testsuites name="mytestsuites">
+  <testsuite name="suite1">
+    <testsuite name="suite2">
+      <testsuite name="suite3">
+        <testsuite name="suite4">
+          <testsuite name="suite5">
+            <testcase classname="foo1" name="a"/>
+            <testcase classname="foo2" name="b"/>
+          </testsuite>
+        </testsuite>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let tss = r.unwrap();
+    assert_eq!(tss.name, "mytestsuites");
+    assert_eq!(tss.suites.len(), 1);
+    assert_eq!(tss.suites[0].name, "suite1");
+    assert_eq!(tss.suites[0].suites.len(), 1);
+    assert_eq!(tss.suites[0].suites[0].name, "suite2");
+    assert_eq!(tss.suites[0].suites[0].suites.len(), 1);
+    assert_eq!(tss.suites[0].suites[0].suites[0].name, "suite3");
+    assert_eq!(tss.suites[0].suites[0].suites[0].suites.len(), 1);
+    assert_eq!(tss.suites[0].suites[0].suites[0].suites[0].name, "suite4");
+    assert_eq!(tss.suites[0].suites[0].suites[0].suites[0].suites.len(), 1);
+    assert_eq!(
+        tss.suites[0].suites[0].suites[0].suites[0].suites[0].name,
+        "suite5"
+    );
+    assert_eq!(
+        tss.suites[0].suites[0].suites[0].suites[0].suites[0]
+            .suites
+            .len(),
+        0
+    );
+    assert_eq!(
+        tss.suites[0].suites[0].suites[0].suites[0].suites[0]
+            .cases
+            .len(),
+        2
+    );
+
+    assert_eq!(
+        tss.suites[0].suites[0].suites[0].suites[0].suites[0].cases[0].name,
+        "foo1::a"
+    );
+    assert_eq!(
+        tss.suites[0].suites[0].suites[0].suites[0].suites[0].cases[1].name,
+        "foo2::b"
+    );
+}
