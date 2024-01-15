@@ -704,54 +704,25 @@ impl TestSuites {
 
 /// Try to decode attribute value as [`f64`]
 fn try_from_attribute_value_f64(value: Cow<[u8]>) -> Result<f64, Error> {
-    match value {
-        Cow::Borrowed(b) => {
-            let s = str::from_utf8(b)?;
-            if s.is_empty() {
-                return Ok(0f64);
-            }
-            Ok(s.parse::<f64>()?)
-        }
-        Cow::Owned(ref b) => {
-            let s = str::from_utf8(b)?;
-            if s.is_empty() {
-                return Ok(0f64);
-            }
-            Ok(s.parse::<f64>()?)
-        }
+    match str::from_utf8(&value)? {
+        "" => Ok(f64::default()),
+        s => Ok(s.parse::<f64>()?),
     }
 }
 
 /// Try to decode attribute value as [`u64`]
 fn try_from_attribute_value_u64(value: Cow<[u8]>) -> Result<u64, Error> {
-    match value {
-        Cow::Borrowed(b) => {
-            let s = str::from_utf8(b)?;
-            if s.is_empty() {
-                return Ok(0u64);
-            }
-            Ok(s.parse::<u64>()?)
-        }
-        Cow::Owned(ref b) => {
-            let s = str::from_utf8(b)?;
-            if s.is_empty() {
-                return Ok(0u64);
-            }
-            Ok(s.parse::<u64>()?)
-        }
+    match str::from_utf8(&value)? {
+        "" => Ok(u64::default()),
+        s => Ok(s.parse::<u64>()?),
     }
 }
 
 /// Try to decode and unescape attribute value as [`String`]
 fn try_from_attribute_value_string(value: Cow<[u8]>) -> Result<String, Error> {
-    let s = match value {
-        Cow::Borrowed(b) => str::from_utf8(b)?,
-        Cow::Owned(ref b) => str::from_utf8(b)?,
-    };
-    match unescape(s)? {
-        Cow::Borrowed(u) => Ok(u.to_owned()),
-        Cow::Owned(ref u) => Ok(u.to_owned()),
-    }
+    let s = str::from_utf8(&value)?;
+    let u = unescape(s)?;
+    Ok(u.to_string())
 }
 
 /// Parse a chunk of xml as system-out or system-err
