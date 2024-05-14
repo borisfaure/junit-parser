@@ -439,7 +439,7 @@ impl TestCase {
         } else if let Some(gn) = self.group.as_ref() {
             self.name = format!("{}::{}", gn, self.original_name);
         } else {
-            self.name = self.original_name.clone();
+            self.name.clone_from(&self.original_name);
         }
         Ok(())
     }
