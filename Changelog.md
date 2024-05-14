@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1 -- 2024-05-14
+
+ - Simplify code
+
 ## 1.1.0 -- 2024-01-10
 
  - Support nested `testsuite` tags
