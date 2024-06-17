@@ -47,7 +47,6 @@ use quick_xml::escape::unescape;
 use quick_xml::events::BytesStart as XMLBytesStart;
 use quick_xml::events::Event as XMLEvent;
 use quick_xml::name::QName;
-use quick_xml::Error as XMLError;
 use quick_xml::Reader as XMLReader;
 use std::borrow::Cow;
 #[cfg(feature = "properties_as_hashmap")]
@@ -89,7 +88,7 @@ fn parse_property<B: BufRead>(
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"property") => break,
                 Ok(XMLEvent::Eof) => {
-                    return Err(XMLError::UnexpectedEof("property".to_string()).into())
+                    return Err(Error::UnexpectedEndOfFile("property".to_string()));
                 }
                 Ok(XMLEvent::Text(e)) => {
                     v = Some(e.unescape()?.trim().to_string());
@@ -125,7 +124,7 @@ impl Properties {
                     p.add_property(k, v);
                 }
                 Ok(XMLEvent::Eof) => {
-                    return Err(XMLError::UnexpectedEof("properties".to_string()).into())
+                    return Err(Error::UnexpectedEndOfFile("properties".to_string()));
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -196,7 +195,7 @@ impl TestFailure {
                     tf.text = e.unescape()?.trim().to_string();
                 }
                 Ok(XMLEvent::Eof) => {
-                    return Err(XMLError::UnexpectedEof("failure".to_string()).into())
+                    return Err(Error::UnexpectedEndOfFile("failure".to_string()));
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -251,7 +250,7 @@ impl TestError {
                     te.text = e.unescape()?.trim().to_string();
                 }
                 Ok(XMLEvent::Eof) => {
-                    return Err(XMLError::UnexpectedEof("error".to_string()).into())
+                    return Err(Error::UnexpectedEndOfFile("error".to_string()));
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -306,7 +305,7 @@ impl TestSkipped {
                     ts.text = e.unescape()?.trim().to_string();
                 }
                 Ok(XMLEvent::Eof) => {
-                    return Err(XMLError::UnexpectedEof("skipped".to_string()).into())
+                    return Err(Error::UnexpectedEndOfFile("skipped".to_string()));
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -495,7 +494,7 @@ impl TestCase {
                     tc.properties = Properties::from_reader(r)?;
                 }
                 Ok(XMLEvent::Eof) => {
-                    return Err(XMLError::UnexpectedEof("testcase".to_string()).into())
+                    return Err(Error::UnexpectedEndOfFile("testcase".to_string()))
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -620,7 +619,7 @@ impl TestSuite {
                     ts.properties = Properties::from_reader(r)?;
                 }
                 Ok(XMLEvent::Eof) => {
-                    return Err(XMLError::UnexpectedEof("testsuite".to_string()).into())
+                    return Err(Error::UnexpectedEndOfFile("testsuite".to_string()));
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -691,7 +690,7 @@ impl TestSuites {
                     ts.suites.push(TestSuite::new_empty(e)?);
                 }
                 Ok(XMLEvent::Eof) => {
-                    return Err(XMLError::UnexpectedEof("testsuites".to_string()).into())
+                    return Err(Error::UnexpectedEndOfFile("testsuites".to_string()));
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -739,7 +738,7 @@ fn parse_system<B: BufRead>(
                 res = Some(e.unescape()?.to_string());
             }
             Ok(XMLEvent::Eof) => {
-                return Err(XMLError::UnexpectedEof(format!("{:?}", orig.name())).into());
+                return Err(Error::UnexpectedEndOfFile(format!("{:?}", orig.name())));
             }
             Err(err) => return Err(err.into()),
             _ => (),
@@ -797,7 +796,7 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
                 return Ok(suites);
             }
             Ok(XMLEvent::Eof) => {
-                return Err(XMLError::UnexpectedEof("testsuites".to_string()).into())
+                return Err(Error::UnexpectedEndOfFile("testsuites".to_string()));
             }
             Err(err) => return Err(err.into()),
             _ => (),

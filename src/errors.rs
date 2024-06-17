@@ -19,6 +19,9 @@ pub enum Error {
     /// Error parsing the `property` element: missing `name`
     #[error("Missing `name` attribute in property")]
     MissingPropertyName,
+    /// Error while parsing: unexpected end of file
+    #[error("Unexpected end of XML while parsing a {0} element")]
+    UnexpectedEndOfFile(String),
 }
 
 impl From<::quick_xml::events::attributes::AttrError> for Error {
