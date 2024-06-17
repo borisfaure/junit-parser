@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0 -- 2024-06-01
+
+ - Update quick-xml to 0.32
+ - Add `Error::UnexpectedEndOfFile` variant when the XML file ends unexpectedly
+
 ## 1.1.1 -- 2024-05-14
 
  - Simplify code
