@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 -- 2024-06-25
+
+ - Update quick-xml to 0.33
+
 ## 1.2.0 -- 2024-06-01
 
  - Update quick-xml to 0.32

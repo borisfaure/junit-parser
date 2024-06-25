@@ -1,6 +1,6 @@
 [package]
 name = "junit-parser"
-version = "1.2.0"
+version = "1.2.1"
 authors = ["Boris Faure <boris@fau.re>"]
 license = "BSD-2-Clause"
 edition = "2021"
