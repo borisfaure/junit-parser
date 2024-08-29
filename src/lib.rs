@@ -37,7 +37,7 @@
 #![deny(missing_docs)]
 // Enable feature requirements in the docs from 1.57
 // See https://stackoverflow.com/questions/61417452
-#![cfg_attr(docs_rs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 /// Errors
 mod errors;
