@@ -730,12 +730,16 @@ fn parse_system<B: BufRead>(
     r: &mut XMLReader<B>,
 ) -> Result<Option<String>, Error> {
     let mut buf = Vec::new();
-    let mut res = None;
+    let mut res: Option<String> = None;
     loop {
         match r.read_event_into(&mut buf) {
             Ok(XMLEvent::End(ref e)) if e.name() == orig.name() => break,
             Ok(XMLEvent::Text(e)) => {
-                res = Some(e.unescape()?.to_string());
+                res.get_or_insert(String::new()).push_str(&e.unescape()?);
+            }
+            Ok(XMLEvent::CData(e)) => {
+                res.get_or_insert(String::new())
+                    .push_str(str::from_utf8(&e)?);
             }
             Ok(XMLEvent::Eof) => {
                 return Err(Error::UnexpectedEndOfFile(format!("{:?}", orig.name())));
