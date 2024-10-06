@@ -93,6 +93,9 @@ fn parse_property<B: BufRead>(
                 Ok(XMLEvent::Text(e)) => {
                     v = Some(e.unescape()?.trim().to_string());
                 }
+                Ok(XMLEvent::CData(e)) => {
+                    v = Some(str::from_utf8(&e)?.to_string());
+                }
                 Err(err) => return Err(err.into()),
                 _ => (),
             }

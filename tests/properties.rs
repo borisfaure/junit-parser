@@ -187,3 +187,103 @@ fn test_properties_duplicates_vec() {
         ("step".to_string(), "2nd step".to_string())
     );
 }
+
+#[cfg(feature = "properties_as_hashmap")]
+#[test]
+fn test_properties_cdata_hashmap() {
+    let xml = r#"
+<testsuite>
+  <properties>
+        <property name="author"><![CDATA[
+        Me
+        ]]></property>
+  </properties>
+  <testcase name="ASuccessfulTest">
+    <properties>
+        <property name="author"><![CDATA[
+        John Doe
+        ]]></property>
+    </properties>
+  </testcase>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let t = r.unwrap();
+    assert_eq!(t.suites.len(), 1);
+    let ts = &t.suites[0];
+    assert_eq!(ts.properties.hashmap.len(), 1);
+    assert_eq!(
+        ts.properties.hashmap.get(&"author".to_string()),
+        Some(
+            &r#"
+        Me
+        "#
+            .to_string()
+        )
+    );
+    assert_eq!(ts.cases.len(), 1);
+    let tc = &ts.cases[0];
+    assert_eq!(tc.properties.hashmap.len(), 1);
+    assert_eq!(
+        tc.properties.hashmap.get(&"author".to_string()),
+        Some(
+            &r#"
+        John Doe
+        "#
+            .to_string()
+        )
+    );
+}
+
+#[cfg(feature = "properties_as_vector")]
+#[test]
+fn test_properties_cdata_vec() {
+    let xml = r#"
+<testsuite>
+  <properties>
+        <property name="author"><![CDATA[
+        Me
+        ]]></property>
+  </properties>
+  <testcase name="ASuccessfulTest">
+    <properties>
+        <property name="author"><![CDATA[
+        John Doe
+        ]]></property>
+    </properties>
+  </testcase>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let t = r.unwrap();
+    assert_eq!(t.suites.len(), 1);
+    let ts = &t.suites[0];
+    assert_eq!(ts.properties.vec.len(), 1);
+    assert_eq!(
+        ts.properties.vec[0],
+        (
+            "author".to_string(),
+            r#"
+        Me
+        "#
+            .to_string()
+        )
+    );
+    assert_eq!(ts.cases.len(), 1);
+    let tc = &ts.cases[0];
+    assert_eq!(tc.properties.hashmap.len(), 1);
+    assert_eq!(
+        tc.properties.vec[0],
+        (
+            "author".to_string(),
+            r#"
+        John Doe
+        "#
+            .to_string()
+        )
+    );
+}
