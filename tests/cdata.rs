@@ -56,3 +56,30 @@ fn test_cdata_error() {
     "#
     );
 }
+
+#[test]
+fn test_cdata_skipped() {
+    let xml = r#"
+<testsuite>
+  <testcase name="ASkippedTest">
+    <skipped>
+      <![CDATA[
+        <foo>
+    ]]></skipped>
+    </testcase>
+</testsuite>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let suite = &r.unwrap().suites[0];
+    assert_eq!(suite.cases.len(), 1);
+    let tc = &suite.cases[0];
+    assert_eq!(tc.name, "ASkippedTest");
+    let ts = tc.status.skipped_as_ref();
+    assert_eq!(
+        ts.text,
+        r#"
+        <foo>
+    "#
+    );
+}

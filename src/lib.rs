@@ -316,6 +316,9 @@ impl TestSkipped {
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("skipped".to_string()));
                 }
+                Ok(XMLEvent::CData(e)) => {
+                    ts.text = str::from_utf8(&e)?.to_string();
+                }
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
