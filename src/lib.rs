@@ -258,6 +258,9 @@ impl TestError {
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("error".to_string()));
                 }
+                Ok(XMLEvent::CData(e)) => {
+                    te.text = str::from_utf8(&e)?.to_string();
+                }
                 Err(err) => return Err(err.into()),
                 _ => (),
             }

@@ -29,3 +29,30 @@ fn test_cdata_failure() {
     "#
     );
 }
+
+#[test]
+fn test_cdata_error() {
+    let xml = r#"
+<testsuite>
+  <testcase name="AFailingTest">
+    <error>
+      <![CDATA[
+        <foo>
+    ]]></error>
+    </testcase>
+</testsuite>"#;
+    let cursor = Cursor::new(xml);
+    let r = junit_parser::from_reader(cursor);
+    assert!(r.is_ok());
+    let suite = &r.unwrap().suites[0];
+    assert_eq!(suite.cases.len(), 1);
+    let tc = &suite.cases[0];
+    assert_eq!(tc.name, "AFailingTest");
+    let te = tc.status.error_as_ref();
+    assert_eq!(
+        te.text,
+        r#"
+        <foo>
+    "#
+    );
+}
