@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.1 -- 2024-10-28
+
+ - Update quick-xml to 0.37
+
 ## 1.3.0 -- 2024-10-06
 
  - Parse CDATA sections in `system-out`, `system-err`, `failure`, `error` and
