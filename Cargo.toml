@@ -32,7 +32,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 quick-xml = { version="0.37", features = ["escape-html"]}
-thiserror = "1.0"
+thiserror = "2.0"
 serde = { version = "1.0", features = ["derive"], optional = true }
 document-features = { version = "0.2", optional = true }
 
