@@ -357,7 +357,7 @@ impl TestStatus {
     ///
     /// Panics if the value is not an [`Errror(_)`](#variant.Error)
     pub fn error_as_ref(&self) -> &TestError {
-        if let TestStatus::Error(ref e) = self {
+        if let TestStatus::Error(e) = self {
             return e;
         }
         panic!("called `TestStatus::error()` on a value that is not TestStatus::Error(_)");
@@ -374,7 +374,7 @@ impl TestStatus {
     ///
     /// Panics if the value is not a [`Failure(_)`](#variant.Failure)
     pub fn failure_as_ref(&self) -> &TestFailure {
-        if let TestStatus::Failure(ref e) = self {
+        if let TestStatus::Failure(e) = self {
             return e;
         }
         panic!("called `TestStatus::failure()` on a value that is not TestStatus::Failure(_)");
@@ -391,7 +391,7 @@ impl TestStatus {
     ///
     /// Panics if the value is not a [`Skipped(_)`](#variant.Skipped)
     pub fn skipped_as_ref(&self) -> &TestSkipped {
-        if let TestStatus::Skipped(ref e) = self {
+        if let TestStatus::Skipped(e) = self {
             return e;
         }
         panic!("called `TestStatus::skipped()` on a value that is not TestStatus::Skipped(_)");
