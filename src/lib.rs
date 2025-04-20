@@ -106,6 +106,9 @@ fn parse_property<B: BufRead>(
                         v.as_mut().unwrap().push_str(str::from_utf8(&e)?);
                     }
                 }
+                Ok(XMLEvent::Start(ref e)) => {
+                    r.read_to_end_into(e.name(), &mut Vec::new())?;
+                }
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
@@ -135,6 +138,9 @@ impl Properties {
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"property") => {
                     let (k, v) = parse_property(e, Some(r))?;
                     p.add_property(k, v);
+                }
+                Ok(XMLEvent::Start(ref e)) => {
+                    r.read_to_end_into(e.name(), &mut Vec::new())?;
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("properties".to_string()));
@@ -374,6 +380,9 @@ impl TestFailure {
                         tf.text.push_str(str::from_utf8(&e)?);
                     }
                 }
+                Ok(XMLEvent::Start(ref e)) => {
+                    r.read_to_end_into(e.name(), &mut Vec::new())?;
+                }
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
@@ -442,6 +451,9 @@ impl TestError {
                         te.text.push_str(str::from_utf8(&e)?);
                     }
                 }
+                Ok(XMLEvent::Start(ref e)) => {
+                    r.read_to_end_into(e.name(), &mut Vec::new())?;
+                }
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
@@ -509,6 +521,9 @@ impl TestSkipped {
                         ts.text.push('\n');
                         ts.text.push_str(str::from_utf8(&e)?);
                     }
+                }
+                Ok(XMLEvent::Start(ref e)) => {
+                    r.read_to_end_into(e.name(), &mut Vec::new())?;
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -903,6 +918,9 @@ impl TestSuite {
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"properties") => {
                     ts.properties = Properties::from_reader(r)?;
                 }
+                Ok(XMLEvent::Start(ref e)) => {
+                    r.read_to_end_into(e.name(), &mut Vec::new())?;
+                }
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("testsuite".to_string()));
                 }
@@ -977,6 +995,9 @@ impl TestSuites {
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("testsuites".to_string()));
                 }
+                Ok(XMLEvent::Start(ref e)) => {
+                    r.read_to_end_into(e.name(), &mut Vec::new())?;
+                }
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
@@ -1028,6 +1049,9 @@ fn parse_system<B: BufRead>(
             }
             Ok(XMLEvent::Eof) => {
                 return Err(Error::UnexpectedEndOfFile(format!("{:?}", orig.name())));
+            }
+            Ok(XMLEvent::Start(ref e)) => {
+                r.read_to_end_into(e.name(), &mut Vec::new())?;
             }
             Err(err) => return Err(err.into()),
             _ => (),
@@ -1083,6 +1107,9 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
                 let mut suites = TestSuites::default();
                 suites.suites.push(ts);
                 return Ok(suites);
+            }
+            Ok(XMLEvent::Start(ref e)) => {
+                r.read_to_end_into(e.name(), &mut Vec::new())?;
             }
             Ok(XMLEvent::Eof) => {
                 return Err(Error::UnexpectedEndOfFile("testsuites".to_string()));
