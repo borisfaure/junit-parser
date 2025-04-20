@@ -1,6 +1,5 @@
 //! Test CDATA parsing in various elements
 
-use junit_parser;
 use std::io::Cursor;
 
 #[test]

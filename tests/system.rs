@@ -1,6 +1,5 @@
 //! System-out/err parsing tests
 
-use junit_parser;
 use std::io::Cursor;
 
 #[test]

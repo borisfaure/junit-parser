@@ -1,6 +1,5 @@
 //! Tests for invalid XML
 
-use junit_parser;
 use junit_parser::Error;
 use std::io::Cursor;
 

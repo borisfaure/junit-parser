@@ -1,6 +1,5 @@
 //! Test the properties parsing
 
-use junit_parser;
 use std::io::Cursor;
 
 #[test]

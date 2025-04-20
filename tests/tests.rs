@@ -3,7 +3,6 @@
 //! Some tests may seem duplicate since they test start-end elements and
 //! empty-element tags but the parser uses different codepaths
 
-use junit_parser;
 use std::io::Cursor;
 
 #[test]
