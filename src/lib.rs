@@ -83,8 +83,8 @@ fn parse_property<B: BufRead>(
         };
     }
     if let Some(r) = r {
-        let mut buf = Vec::new();
         loop {
+            let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"property") => break,
                 Ok(XMLEvent::Eof) => {
@@ -99,8 +99,8 @@ fn parse_property<B: BufRead>(
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
+            buf.clear();
         }
-        buf.clear();
     }
     match (k, v) {
         (Some(k), Some(v)) => Ok((k, v)),
@@ -113,8 +113,8 @@ impl Properties {
     /// Create a [`Properties`] from a XML `properties` element
     fn from_reader<B: BufRead>(r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut p = Self::default();
-        let mut buf = Vec::new();
         loop {
+            let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"properties") => break,
 
@@ -132,8 +132,8 @@ impl Properties {
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
+            buf.clear();
         }
-        buf.clear();
         Ok(p)
     }
 
@@ -237,10 +237,10 @@ impl RerunOrFlaky {
         };
         rt.parse_attributes(e)?;
 
-        let mut buf = Vec::new();
         let end_tag_name = e.name().clone();
 
         loop {
+            let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref end_event)) if end_event.name() == end_tag_name => break,
                 Ok(XMLEvent::Text(e)) => {
@@ -331,8 +331,8 @@ impl TestFailure {
     fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut tf = Self::default();
         tf.parse_attributes(e)?;
-        let mut buf = Vec::new();
         loop {
+            let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"failure") => break,
                 Ok(XMLEvent::Text(e)) => {
@@ -347,8 +347,8 @@ impl TestFailure {
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
+            buf.clear();
         }
-        buf.clear();
         Ok(tf)
     }
 }
@@ -389,8 +389,8 @@ impl TestError {
     fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut te = Self::default();
         te.parse_attributes(e)?;
-        let mut buf = Vec::new();
         loop {
+            let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"error") => break,
                 Ok(XMLEvent::Text(e)) => {
@@ -405,8 +405,8 @@ impl TestError {
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
+            buf.clear();
         }
-        buf.clear();
         Ok(te)
     }
 }
@@ -447,8 +447,8 @@ impl TestSkipped {
     fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
-        let mut buf = Vec::new();
         loop {
+            let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"skipped") => break,
                 Ok(XMLEvent::Text(e)) => {
@@ -463,8 +463,8 @@ impl TestSkipped {
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
+            buf.clear();
         }
-        buf.clear();
         Ok(ts)
     }
 }
@@ -613,8 +613,8 @@ impl TestCase {
             ..Default::default()
         };
         tc.parse_attributes(e)?;
-        let mut buf = Vec::new();
         loop {
+            let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testcase") => break,
 
@@ -734,8 +734,8 @@ impl TestCase {
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
+            buf.clear();
         }
-        buf.clear();
         Ok(tc)
     }
 }
@@ -829,8 +829,8 @@ impl TestSuite {
     fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
-        let mut buf = Vec::new();
         loop {
+            let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuite") => break,
                 Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
@@ -859,8 +859,8 @@ impl TestSuite {
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
+            buf.clear();
         }
-        buf.clear();
         Ok(ts)
     }
 }
@@ -913,8 +913,8 @@ impl TestSuites {
     fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
         let mut ts = Self::default();
         ts.parse_attributes(e)?;
-        let mut buf = Vec::new();
         loop {
+            let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuites") => break,
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testrun") => break,
@@ -930,8 +930,8 @@ impl TestSuites {
                 Err(err) => return Err(err.into()),
                 _ => (),
             }
+            buf.clear();
         }
-        buf.clear();
         Ok(ts)
     }
 }
@@ -964,9 +964,9 @@ fn parse_system<B: BufRead>(
     orig: &XMLBytesStart,
     r: &mut XMLReader<B>,
 ) -> Result<Option<String>, Error> {
-    let mut buf = Vec::new();
     let mut res: Option<String> = Some(String::new());
     loop {
+        let mut buf = Vec::new();
         match r.read_event_into(&mut buf) {
             Ok(XMLEvent::End(ref e)) if e.name() == orig.name() => break,
             Ok(XMLEvent::Text(e)) => {
@@ -982,8 +982,8 @@ fn parse_system<B: BufRead>(
             Err(err) => return Err(err.into()),
             _ => (),
         }
+        buf.clear();
     }
-    buf.clear();
     Ok(res)
 }
 
@@ -1007,8 +1007,8 @@ fn parse_system<B: BufRead>(
 /// ```
 pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
     let mut r = XMLReader::from_reader(reader);
-    let mut buf = Vec::new();
     loop {
+        let mut buf = Vec::new();
         match r.read_event_into(&mut buf) {
             Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuites") => {
                 return TestSuites::new_empty(e);
@@ -1040,5 +1040,6 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
             Err(err) => return Err(err.into()),
             _ => (),
         }
+        buf.clear();
     }
 }
