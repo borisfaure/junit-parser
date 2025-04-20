@@ -155,6 +155,147 @@ impl Properties {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Copy, Default)]
+/// The kind of rerun or flaky test result
+pub enum RerunOrFlakyKind {
+    /// Flaky failure
+    #[default]
+    FlakyFailure,
+    /// Flaky error
+    FlakyError,
+    /// Rerun failure
+    RerunFailure,
+    /// Rerun error
+    RerunError,
+}
+
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug, Clone, Default)]
+/// Value from a `<flakyFailure />`, `<rerunFailure />`, `<flakyError />`, `<rerunError />` tag
+pub struct RerunOrFlaky {
+    /// The `timestamp` attribute
+    pub timestamp: Option<String>,
+    /// The `time` attribute
+    pub time: f64,
+    /// The `type` attribute
+    pub rerun_type: String,
+    /// The `message` attribute
+    pub message: String,
+    /// Body of the tag
+    pub text: String,
+    /// stdout output from the `system-out` element nested within
+    pub system_out: Option<String>,
+    /// stderr output from the `system-err` element nested within
+    pub system_err: Option<String>,
+    /// Stack trace of the flaky failure
+    pub stack_trace: Option<String>,
+    /// The kind of rerun
+    pub kind: RerunOrFlakyKind,
+}
+
+impl RerunOrFlaky {
+    /// Fill up `self` with attributes from the XML tag
+    fn parse_attributes(&mut self, e: &XMLBytesStart) -> Result<(), Error> {
+        for a in e.attributes() {
+            let a = a?;
+            match a.key {
+                // The schema specifies 'type' attribute, mapping to rerun_type
+                QName(b"type") => self.rerun_type = try_from_attribute_value_string(a.value)?,
+                QName(b"time") => self.time = try_from_attribute_value_f64(a.value)?,
+                QName(b"timestamp") => {
+                    self.timestamp = Some(try_from_attribute_value_string(a.value)?)
+                }
+                QName(b"message") => self.message = try_from_attribute_value_string(a.value)?,
+                _ => {}
+            };
+        }
+        Ok(())
+    }
+
+    /// New [`RerunOrFlaky`] from empty XML tag, requires the kind of rerun/flaky based on the tag name.
+    fn new_empty(e: &XMLBytesStart, kind: RerunOrFlakyKind) -> Result<Self, Error> {
+        let mut rt = Self {
+            kind,
+            ..Default::default()
+        };
+        rt.parse_attributes(e)?;
+        Ok(rt)
+    }
+
+    /// New [`RerunOrFlaky`] from XML tree, requires the kind of rerun based on the tag name.
+    fn from_reader<B: BufRead>(
+        e: &XMLBytesStart,
+        r: &mut XMLReader<B>,
+        kind: RerunOrFlakyKind,
+    ) -> Result<Self, Error> {
+        let mut rt = Self {
+            kind,
+            system_out: None,
+            system_err: None,
+            stack_trace: None,
+            ..Default::default()
+        };
+        rt.parse_attributes(e)?;
+
+        let mut buf = Vec::new();
+        let end_tag_name = e.name().clone();
+
+        loop {
+            match r.read_event_into(&mut buf) {
+                Ok(XMLEvent::End(ref end_event)) if end_event.name() == end_tag_name => break,
+                Ok(XMLEvent::Text(e)) => {
+                    rt.text.push_str(e.unescape()?.trim());
+                }
+                Ok(XMLEvent::CData(e)) => {
+                    rt.text.push_str(str::from_utf8(&e)?);
+                }
+                Ok(XMLEvent::Start(ref start_event)) => match start_event.name() {
+                    QName(b"system-out") => {
+                        if let Some(parsed_content) = parse_system(start_event, r)? {
+                            let current_out = rt.system_out.get_or_insert_with(String::new);
+                            if !current_out.is_empty() {
+                                current_out.push('\n');
+                            }
+                            current_out.push_str(&parsed_content);
+                        }
+                    }
+                    QName(b"system-err") => {
+                        if let Some(parsed_content) = parse_system(start_event, r)? {
+                            let current_err = rt.system_err.get_or_insert_with(String::new);
+                            if !current_err.is_empty() {
+                                current_err.push('\n');
+                            }
+                            current_err.push_str(&parsed_content);
+                        }
+                    }
+                    QName(b"stackTrace") => {
+                        // Overwrite stackTrace as multiple instances are unlikely/undefined
+                        rt.stack_trace = parse_system(start_event, r)?;
+                    }
+                    _ => {
+                        r.read_to_end_into(start_event.name(), &mut Vec::new())?;
+                    }
+                },
+                Ok(XMLEvent::Empty(ref empty_event)) => match empty_event.name() {
+                    QName(b"system-out") => {}
+                    QName(b"system-err") => {}
+                    QName(b"stackTrace") => {}
+                    _ => {}
+                },
+                Ok(XMLEvent::Eof) => {
+                    let tag_name = String::from_utf8_lossy(end_tag_name.as_ref()).to_string();
+                    return Err(Error::UnexpectedEndOfFile(tag_name));
+                }
+                Err(err) => return Err(err.into()),
+                _ => (),
+            }
+            buf.clear();
+        }
+        Ok(rt)
+    }
+}
+
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Default)]
 /// Value from a `<failure />` tag
 pub struct TestFailure {
@@ -427,6 +568,8 @@ pub struct TestCase {
     pub system_err: Option<String>,
     /// Properties of the test case
     pub properties: Properties,
+    /// Reruns of the test case
+    pub reruns: Vec<RerunOrFlaky>,
 }
 impl TestCase {
     /// Fill up `self` with attributes from the XML tag
@@ -486,6 +629,30 @@ impl TestCase {
                             tc.system_err = Some(String::new());
                         }
                     }
+                    QName(b"flakyFailure") => {
+                        tc.reruns.push(RerunOrFlaky::new_empty(
+                            empty_event,
+                            RerunOrFlakyKind::FlakyFailure,
+                        )?);
+                    }
+                    QName(b"flakyError") => {
+                        tc.reruns.push(RerunOrFlaky::new_empty(
+                            empty_event,
+                            RerunOrFlakyKind::FlakyError,
+                        )?);
+                    }
+                    QName(b"rerunFailure") => {
+                        tc.reruns.push(RerunOrFlaky::new_empty(
+                            empty_event,
+                            RerunOrFlakyKind::RerunFailure,
+                        )?);
+                    }
+                    QName(b"rerunError") => {
+                        tc.reruns.push(RerunOrFlaky::new_empty(
+                            empty_event,
+                            RerunOrFlakyKind::RerunError,
+                        )?);
+                    }
                     QName(b"skipped") => {
                         tc.status = TestStatus::Skipped(TestSkipped::new_empty(empty_event)?);
                     }
@@ -497,6 +664,7 @@ impl TestCase {
                     }
                     _ => {}
                 },
+
                 Ok(XMLEvent::Start(ref start_event)) => match start_event.name() {
                     QName(b"skipped") => {
                         tc.status = TestStatus::Skipped(TestSkipped::from_reader(start_event, r)?);
@@ -506,6 +674,34 @@ impl TestCase {
                     }
                     QName(b"error") => {
                         tc.status = TestStatus::Error(TestError::from_reader(start_event, r)?);
+                    }
+                    QName(b"flakyFailure") => {
+                        tc.reruns.push(RerunOrFlaky::from_reader(
+                            start_event,
+                            r,
+                            RerunOrFlakyKind::FlakyFailure,
+                        )?);
+                    }
+                    QName(b"flakyError") => {
+                        tc.reruns.push(RerunOrFlaky::from_reader(
+                            start_event,
+                            r,
+                            RerunOrFlakyKind::FlakyError,
+                        )?);
+                    }
+                    QName(b"rerunFailure") => {
+                        tc.reruns.push(RerunOrFlaky::from_reader(
+                            start_event,
+                            r,
+                            RerunOrFlakyKind::RerunFailure,
+                        )?);
+                    }
+                    QName(b"rerunError") => {
+                        tc.reruns.push(RerunOrFlaky::from_reader(
+                            start_event,
+                            r,
+                            RerunOrFlakyKind::RerunError,
+                        )?);
                     }
                     QName(b"system-out") => {
                         if let Some(parsed_content) = parse_system(start_event, r)? {
