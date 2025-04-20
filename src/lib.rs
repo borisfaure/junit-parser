@@ -91,10 +91,20 @@ fn parse_property<B: BufRead>(
                     return Err(Error::UnexpectedEndOfFile("property".to_string()));
                 }
                 Ok(XMLEvent::Text(e)) => {
-                    v = Some(e.unescape()?.trim().to_string());
+                    if v.is_none() {
+                        v = Some(e.unescape()?.trim().to_string());
+                    } else {
+                        v.as_mut().unwrap().push('\n');
+                        v.as_mut().unwrap().push_str(e.unescape()?.trim());
+                    }
                 }
                 Ok(XMLEvent::CData(e)) => {
-                    v = Some(str::from_utf8(&e)?.to_string());
+                    if v.is_none() {
+                        v = Some(str::from_utf8(&e)?.to_string());
+                    } else {
+                        v.as_mut().unwrap().push('\n');
+                        v.as_mut().unwrap().push_str(str::from_utf8(&e)?);
+                    }
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -237,17 +247,27 @@ impl RerunOrFlaky {
         };
         rt.parse_attributes(e)?;
 
-        let end_tag_name = e.name().clone();
+        let end_tag_name = e.name();
 
         loop {
             let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref end_event)) if end_event.name() == end_tag_name => break,
                 Ok(XMLEvent::Text(e)) => {
-                    rt.text.push_str(e.unescape()?.trim());
+                    if rt.text.is_empty() {
+                        rt.text = e.unescape()?.trim().to_string();
+                    } else {
+                        rt.text.push('\n');
+                        rt.text.push_str(e.unescape()?.trim());
+                    }
                 }
                 Ok(XMLEvent::CData(e)) => {
-                    rt.text.push_str(str::from_utf8(&e)?);
+                    if rt.text.is_empty() {
+                        rt.text = str::from_utf8(&e)?.to_string();
+                    } else {
+                        rt.text.push('\n');
+                        rt.text.push_str(str::from_utf8(&e)?);
+                    }
                 }
                 Ok(XMLEvent::Start(ref start_event)) => match start_event.name() {
                     QName(b"system-out") => {
@@ -336,13 +356,23 @@ impl TestFailure {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"failure") => break,
                 Ok(XMLEvent::Text(e)) => {
-                    tf.text = e.unescape()?.trim().to_string();
+                    if tf.text.is_empty() {
+                        tf.text = e.unescape()?.trim().to_string();
+                    } else {
+                        tf.text.push('\n');
+                        tf.text.push_str(e.unescape()?.trim());
+                    }
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("failure".to_string()));
                 }
                 Ok(XMLEvent::CData(e)) => {
-                    tf.text = str::from_utf8(&e)?.to_string();
+                    if tf.text.is_empty() {
+                        tf.text = str::from_utf8(&e)?.to_string();
+                    } else {
+                        tf.text.push('\n');
+                        tf.text.push_str(str::from_utf8(&e)?);
+                    }
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -394,13 +424,23 @@ impl TestError {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"error") => break,
                 Ok(XMLEvent::Text(e)) => {
-                    te.text = e.unescape()?.trim().to_string();
+                    if te.text.is_empty() {
+                        te.text = e.unescape()?.trim().to_string();
+                    } else {
+                        te.text.push('\n');
+                        te.text.push_str(e.unescape()?.trim());
+                    }
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("error".to_string()));
                 }
                 Ok(XMLEvent::CData(e)) => {
-                    te.text = str::from_utf8(&e)?.to_string();
+                    if te.text.is_empty() {
+                        te.text = str::from_utf8(&e)?.to_string();
+                    } else {
+                        te.text.push('\n');
+                        te.text.push_str(str::from_utf8(&e)?);
+                    }
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -452,13 +492,23 @@ impl TestSkipped {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"skipped") => break,
                 Ok(XMLEvent::Text(e)) => {
-                    ts.text = e.unescape()?.trim().to_string();
+                    if ts.text.is_empty() {
+                        ts.text = e.unescape()?.trim().to_string();
+                    } else {
+                        ts.text.push('\n');
+                        ts.text.push_str(e.unescape()?.trim());
+                    }
                 }
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("skipped".to_string()));
                 }
                 Ok(XMLEvent::CData(e)) => {
-                    ts.text = str::from_utf8(&e)?.to_string();
+                    if ts.text.is_empty() {
+                        ts.text = str::from_utf8(&e)?.to_string();
+                    } else {
+                        ts.text.push('\n');
+                        ts.text.push_str(str::from_utf8(&e)?);
+                    }
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
