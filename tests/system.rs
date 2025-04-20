@@ -213,3 +213,31 @@ fn test_system_out_err_no_content() {
     let r = junit_parser::from_reader(cursor);
     assert!(r.is_ok());
 }
+
+#[test]
+fn test_multiple_system_out_err_in_testcase() {
+    let xml = r#"
+<testsuite tests="1">
+  <testcase classname="some.class" name="SomeTest">
+    <system-out>First TC stdout</system-out>
+    <system-err>First TC stderr</system-err>
+    <skipped message="Skipped for test"/>
+    <system-out>Second TC stdout</system-out>
+    <system-err>Second TC stderr</system-err>
+  </testcase>
+</testsuite>
+"#;
+    let cursor = Cursor::new(xml);
+    let suites = junit_parser::from_reader(cursor).expect("Failed to parse XML");
+
+    let case = &suites.suites[0].cases[0];
+    assert_eq!(
+        case.system_out.as_deref(),
+        Some("First TC stdout\nSecond TC stdout")
+    );
+    assert_eq!(
+        case.system_err.as_deref(),
+        Some("First TC stderr\nSecond TC stderr")
+    );
+    assert!(case.status.is_skipped());
+}
