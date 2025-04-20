@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.4.0 -- 2025-04-20
+
+ - Add support for parsing rerun/flaky elements (`<flakyFailure>`, `<flakyError>`, `<rerunFailure>`, `<rerunError>`) within `<testcase>`.
+   - Introduce `RerunKind` enum and `RerunType` struct to represent these elements.
+   - Parse attributes (`type`, `message`, `time`, `timestamp`) and nested elements (`system-out`, `system-err`, `stackTrace`) for reruns.
+   - Update `TestCase` to store all rerun types in a single `reruns: Vec<RerunType>` field.
+ - Handle multiple `<system-out>` and `<system-err>` tags within `<testcase>` and rerun elements by concatenating their content, separated by newlines.
+ - Handle unknown tags by ignoring their content even if they would contain
+   known tags.
+ - Support multiple text/CDATA sections by concatenating their content,
+   separated by newlines.
+ - Add comprehensive tests for rerun and system-out/err parsing, unknown tags
+   and multiple text/CDATA sections.
+
+
 ## 1.3.1 -- 2024-10-28
 
  - Update quick-xml to 0.37
