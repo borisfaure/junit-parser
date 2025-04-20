@@ -464,47 +464,74 @@ impl TestCase {
 
     /// New [`TestCase`] from XML tree
     fn from_reader<B: BufRead>(e: &XMLBytesStart, r: &mut XMLReader<B>) -> Result<Self, Error> {
-        let mut tc = Self::default();
+        let mut tc = Self {
+            system_out: None,
+            system_err: None,
+            ..Default::default()
+        };
         tc.parse_attributes(e)?;
         let mut buf = Vec::new();
         loop {
             match r.read_event_into(&mut buf) {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testcase") => break,
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"skipped") => {
-                    let ts = TestSkipped::from_reader(e, r)?;
-                    tc.status = TestStatus::Skipped(ts);
-                }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"skipped") => {
-                    let ts = TestSkipped::new_empty(e)?;
-                    tc.status = TestStatus::Skipped(ts);
-                }
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"failure") => {
-                    let tf = TestFailure::from_reader(e, r)?;
-                    tc.status = TestStatus::Failure(tf);
-                }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"failure") => {
-                    let tf = TestFailure::new_empty(e)?;
-                    tc.status = TestStatus::Failure(tf);
-                }
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"error") => {
-                    let te = TestError::from_reader(e, r)?;
-                    tc.status = TestStatus::Error(te);
-                }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"error") => {
-                    let te = TestError::new_empty(e)?;
-                    tc.status = TestStatus::Error(te);
-                }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"system-out") => {}
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-out") => {
-                    tc.system_out = parse_system(e, r)?;
-                }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"system-err") => {}
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-err") => {
-                    tc.system_err = parse_system(e, r)?;
-                }
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"properties") => {
-                    tc.properties = Properties::from_reader(r)?;
-                }
+
+                Ok(XMLEvent::Empty(ref empty_event)) => match empty_event.name() {
+                    QName(b"system-out") => {
+                        if tc.system_out.is_none() {
+                            tc.system_out = Some(String::new());
+                        }
+                    }
+                    QName(b"system-err") => {
+                        if tc.system_err.is_none() {
+                            tc.system_err = Some(String::new());
+                        }
+                    }
+                    QName(b"skipped") => {
+                        tc.status = TestStatus::Skipped(TestSkipped::new_empty(empty_event)?);
+                    }
+                    QName(b"failure") => {
+                        tc.status = TestStatus::Failure(TestFailure::new_empty(empty_event)?);
+                    }
+                    QName(b"error") => {
+                        tc.status = TestStatus::Error(TestError::new_empty(empty_event)?);
+                    }
+                    _ => {}
+                },
+                Ok(XMLEvent::Start(ref start_event)) => match start_event.name() {
+                    QName(b"skipped") => {
+                        tc.status = TestStatus::Skipped(TestSkipped::from_reader(start_event, r)?);
+                    }
+                    QName(b"failure") => {
+                        tc.status = TestStatus::Failure(TestFailure::from_reader(start_event, r)?);
+                    }
+                    QName(b"error") => {
+                        tc.status = TestStatus::Error(TestError::from_reader(start_event, r)?);
+                    }
+                    QName(b"system-out") => {
+                        if let Some(parsed_content) = parse_system(start_event, r)? {
+                            let current_out = tc.system_out.get_or_insert_with(String::new);
+                            if !current_out.is_empty() {
+                                current_out.push('\n');
+                            }
+                            current_out.push_str(&parsed_content);
+                        }
+                    }
+                    QName(b"system-err") => {
+                        if let Some(parsed_content) = parse_system(start_event, r)? {
+                            let current_err = tc.system_err.get_or_insert_with(String::new);
+                            if !current_err.is_empty() {
+                                current_err.push('\n');
+                            }
+                            current_err.push_str(&parsed_content);
+                        }
+                    }
+                    QName(b"properties") => {
+                        tc.properties = Properties::from_reader(r)?;
+                    }
+                    _ => {
+                        r.read_to_end_into(start_event.name(), &mut Vec::new())?;
+                    }
+                },
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("testcase".to_string()))
                 }
@@ -742,7 +769,7 @@ fn parse_system<B: BufRead>(
     r: &mut XMLReader<B>,
 ) -> Result<Option<String>, Error> {
     let mut buf = Vec::new();
-    let mut res: Option<String> = None;
+    let mut res: Option<String> = Some(String::new());
     loop {
         match r.read_event_into(&mut buf) {
             Ok(XMLEvent::End(ref e)) if e.name() == orig.name() => break,
