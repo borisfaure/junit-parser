@@ -7,6 +7,9 @@ pub enum Error {
     /// Error while parsing XML
     #[error("Error while parsing XML")]
     XMLError(#[from] ::quick_xml::Error),
+    /// Error while decoding XML
+    #[error("Error while decoding XML")]
+    EncodingError(#[from] ::quick_xml::encoding::EncodingError),
     /// Error while converting f64 attribute
     #[error("Error while converting f64 attribute")]
     ParseFloatError(#[from] std::num::ParseFloatError),

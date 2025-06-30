@@ -92,10 +92,10 @@ fn parse_property<B: BufRead>(
                 }
                 Ok(XMLEvent::Text(e)) => {
                     if v.is_none() {
-                        v = Some(e.unescape()?.trim().to_string());
+                        v = Some(e.decode()?.trim().to_string());
                     } else {
                         v.as_mut().unwrap().push('\n');
-                        v.as_mut().unwrap().push_str(e.unescape()?.trim());
+                        v.as_mut().unwrap().push_str(e.decode()?.trim());
                     }
                 }
                 Ok(XMLEvent::CData(e)) => {
@@ -261,10 +261,10 @@ impl RerunOrFlaky {
                 Ok(XMLEvent::End(ref end_event)) if end_event.name() == end_tag_name => break,
                 Ok(XMLEvent::Text(e)) => {
                     if rt.text.is_empty() {
-                        rt.text = e.unescape()?.trim().to_string();
+                        rt.text = e.decode()?.trim().to_string();
                     } else {
                         rt.text.push('\n');
-                        rt.text.push_str(e.unescape()?.trim());
+                        rt.text.push_str(e.decode()?.trim());
                     }
                 }
                 Ok(XMLEvent::CData(e)) => {
@@ -363,10 +363,10 @@ impl TestFailure {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"failure") => break,
                 Ok(XMLEvent::Text(e)) => {
                     if tf.text.is_empty() {
-                        tf.text = e.unescape()?.trim().to_string();
+                        tf.text = e.decode()?.trim().to_string();
                     } else {
                         tf.text.push('\n');
-                        tf.text.push_str(e.unescape()?.trim());
+                        tf.text.push_str(e.decode()?.trim());
                     }
                 }
                 Ok(XMLEvent::Eof) => {
@@ -434,10 +434,10 @@ impl TestError {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"error") => break,
                 Ok(XMLEvent::Text(e)) => {
                     if te.text.is_empty() {
-                        te.text = e.unescape()?.trim().to_string();
+                        te.text = e.decode()?.trim().to_string();
                     } else {
                         te.text.push('\n');
-                        te.text.push_str(e.unescape()?.trim());
+                        te.text.push_str(e.decode()?.trim());
                     }
                 }
                 Ok(XMLEvent::Eof) => {
@@ -505,10 +505,10 @@ impl TestSkipped {
                 Ok(XMLEvent::End(ref e)) if e.name() == QName(b"skipped") => break,
                 Ok(XMLEvent::Text(e)) => {
                     if ts.text.is_empty() {
-                        ts.text = e.unescape()?.trim().to_string();
+                        ts.text = e.decode()?.trim().to_string();
                     } else {
                         ts.text.push('\n');
-                        ts.text.push_str(e.unescape()?.trim());
+                        ts.text.push_str(e.decode()?.trim());
                     }
                 }
                 Ok(XMLEvent::Eof) => {
@@ -1041,7 +1041,7 @@ fn parse_system<B: BufRead>(
         match r.read_event_into(&mut buf) {
             Ok(XMLEvent::End(ref e)) if e.name() == orig.name() => break,
             Ok(XMLEvent::Text(e)) => {
-                res.get_or_insert(String::new()).push_str(&e.unescape()?);
+                res.get_or_insert(String::new()).push_str(&e.decode()?);
             }
             Ok(XMLEvent::CData(e)) => {
                 res.get_or_insert(String::new())
