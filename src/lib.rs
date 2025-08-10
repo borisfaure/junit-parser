@@ -90,22 +90,20 @@ fn parse_property<B: BufRead>(
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("property".to_string()));
                 }
-                Ok(XMLEvent::Text(e)) => {
-                    if v.is_none() {
-                        v = Some(e.decode()?.trim().to_string());
-                    } else {
-                        v.as_mut().unwrap().push('\n');
-                        v.as_mut().unwrap().push_str(e.decode()?.trim());
+                Ok(XMLEvent::Text(e)) => match v {
+                    None => v = Some(e.decode()?.trim().to_string()),
+                    Some(ref mut val) => {
+                        val.push('\n');
+                        val.push_str(e.decode()?.trim());
                     }
-                }
-                Ok(XMLEvent::CData(e)) => {
-                    if v.is_none() {
-                        v = Some(str::from_utf8(&e)?.to_string());
-                    } else {
-                        v.as_mut().unwrap().push('\n');
-                        v.as_mut().unwrap().push_str(str::from_utf8(&e)?);
+                },
+                Ok(XMLEvent::CData(e)) => match v {
+                    None => v = Some(str::from_utf8(&e)?.to_string()),
+                    Some(ref mut val) => {
+                        val.push('\n');
+                        val.push_str(str::from_utf8(&e)?);
                     }
-                }
+                },
                 Ok(XMLEvent::Start(ref e)) => {
                     r.read_to_end_into(e.name(), &mut Vec::new())?;
                 }
