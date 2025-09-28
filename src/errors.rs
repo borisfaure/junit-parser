@@ -25,6 +25,10 @@ pub enum Error {
     /// Error while parsing: unexpected end of file
     #[error("Unexpected end of XML while parsing a {0} element")]
     UnexpectedEndOfFile(String),
+    /// Chrono ParseError
+    #[cfg(feature = "chrono")]
+    #[error("Error while decoding Date/Time")]
+    ChronoParseError(#[from] chrono::format::ParseError),
 }
 
 impl From<::quick_xml::events::attributes::AttrError> for Error {

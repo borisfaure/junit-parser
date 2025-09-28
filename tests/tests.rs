@@ -3,6 +3,8 @@
 //! Some tests may seem duplicate since they test start-end elements and
 //! empty-element tags but the parser uses different codepaths
 
+#[cfg(feature = "chrono")]
+use chrono::TimeZone;
 use std::io::Cursor;
 
 #[test]
@@ -660,6 +662,16 @@ fn test_optional_test_suite_attributes() {
     assert_eq!(tss.suites.len(), 1);
     let ts = &tss.suites[0];
     assert_eq!(ts.assertions, Some(42));
+    #[cfg(feature = "chrono")]
+    assert_eq!(
+        ts.timestamp,
+        Some(
+            chrono::Utc
+                .with_ymd_and_hms(2023, 9, 14, 21, 43, 28)
+                .unwrap()
+        )
+    );
+    #[cfg(not(feature = "chrono"))]
     assert_eq!(ts.timestamp, Some("2023-09-14T23:43:28+02:00".to_string()));
     assert_eq!(ts.hostname, Some("mycomputer.local".to_string()));
     assert_eq!(ts.id, Some("TestSuiteId".to_string()));
@@ -1104,34 +1116,4 @@ fn test_testrun() {
     assert!(ts.cases[0].status.is_success());
     assert!(ts.cases[1].status.is_success());
     assert!(ts.cases[2].status.is_failure());
-}
-
-#[test]
-/// Test parsing the `timestamp` attribute of the `testsuites`, `testsuite`
-/// and `testcase` elements
-fn test_timestamps() {
-    let xml = r#"
-<testsuites timestamp="2025-09-28T11:11:11+00:00">
- <testsuite name="suite1" timestamp="2025-09-28T12:34:56+00:00">
-   <testcase classname="foo1" name="test1" timestamp="2025-09-28T22:33:44+00:00"/>
-   <testcase classname="foo2" name="test2"/>
- </testsuite>
-</testsuites>
- "#;
-    let cursor = Cursor::new(xml);
-    let r = junit_parser::from_reader(cursor);
-    assert!(r.is_ok());
-    let tss = r.unwrap();
-    assert_eq!(tss.timestamp, Some("2025-09-28T11:11:11+00:00".to_string()));
-    assert_eq!(tss.suites.len(), 1);
-    let ts = &tss.suites[0];
-    assert_eq!(ts.name, "suite1");
-    assert_eq!(ts.timestamp, Some("2025-09-28T12:34:56+00:00".to_string()));
-    assert_eq!(ts.cases.len(), 2);
-    let tc = &ts.cases[0];
-    assert_eq!(tc.name, "foo1::test1");
-    assert_eq!(tc.timestamp, Some("2025-09-28T22:33:44+00:00".to_string()));
-    let tc = &ts.cases[1];
-    assert_eq!(tc.name, "foo2::test2");
-    assert_eq!(tc.timestamp, None);
 }

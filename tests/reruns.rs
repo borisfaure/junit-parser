@@ -1,5 +1,7 @@
 //! Test the reruns parsing: `<flakyFailure />`, `<flakyError />`, `<rerunFailure />` and `<rerunError />`
 
+#[cfg(feature = "chrono")]
+use chrono::{TimeZone, Utc};
 use junit_parser::RerunOrFlakyKind;
 use std::io::Cursor;
 
@@ -215,6 +217,12 @@ fn test_multiple_mixed_reruns() {
     assert_eq!(first_rerun_fail.rerun_type, "AssertionFailed");
     assert_eq!(first_rerun_fail.message, "Rerun fail msg 1");
     assert_eq!(first_rerun_fail.text.trim(), "Rerun fail text 1");
+    #[cfg(feature = "chrono")]
+    {
+        let expected_dt = Utc.with_ymd_and_hms(2024, 1, 10, 10, 0, 1).unwrap();
+        assert_eq!(first_rerun_fail.timestamp, Some(expected_dt));
+    }
+    #[cfg(not(feature = "chrono"))]
     assert_eq!(
         first_rerun_fail.timestamp.as_deref(),
         Some("2024-01-10T10:00:01Z")
@@ -236,6 +244,12 @@ fn test_multiple_mixed_reruns() {
     assert_eq!(the_flaky_error.rerun_type, "FlakyErrType");
     assert_eq!(the_flaky_error.message, "Flaky err msg");
     assert_eq!(the_flaky_error.text.trim(), "Flaky err text");
+    #[cfg(feature = "chrono")]
+    {
+        let expected_dt = Utc.with_ymd_and_hms(2024, 1, 10, 10, 0, 4).unwrap();
+        assert_eq!(the_flaky_error.timestamp, Some(expected_dt));
+    }
+    #[cfg(not(feature = "chrono"))]
     assert_eq!(
         the_flaky_error.timestamp.as_deref(),
         Some("2024-01-10T10:00:04Z")
@@ -360,6 +374,12 @@ fn test_rerun_all_attributes() {
     assert_eq!(rerun.message, "Detailed error message");
     assert_eq!(rerun.time, 0.123);
     assert!(rerun.timestamp.is_some());
+    #[cfg(feature = "chrono")]
+    {
+        let expected_dt = Utc.with_ymd_and_hms(2023, 10, 27, 10, 30, 0).unwrap();
+        assert_eq!(rerun.timestamp, Some(expected_dt));
+    }
+    #[cfg(not(feature = "chrono"))]
     assert_eq!(rerun.timestamp.as_deref(), Some("2023-10-27T10:30:00Z"));
     assert_eq!(rerun.text.trim(), "Error body text");
     assert!(rerun.system_out.is_none());
