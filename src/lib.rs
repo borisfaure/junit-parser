@@ -629,6 +629,8 @@ pub struct TestCase {
     pub system_out: Option<String>,
     /// stderr output from the `system-err` element
     pub system_err: Option<String>,
+    /// Timestamp when the test suite was run, from the `timestamp` attribute
+    pub timestamp: Option<String>,
     /// Properties of the test case
     pub properties: Properties,
     /// Reruns of the test case
@@ -648,6 +650,9 @@ impl TestCase {
                 QName(b"group") => self.group = Some(try_from_attribute_value_string(a.value)?),
                 QName(b"file") => self.file = Some(try_from_attribute_value_string(a.value)?),
                 QName(b"line") => self.line = Some(try_from_attribute_value_u64(a.value)?),
+                QName(b"timestamp") => {
+                    self.timestamp = Some(try_from_attribute_value_string(a.value)?)
+                }
                 _ => {}
             };
         }
@@ -949,6 +954,9 @@ pub struct TestSuites {
     pub skipped: u64,
     /// Name of the test suites, from the `name` attribute
     pub name: String,
+    /// Timestamp when the test suites were run, from the `timestamp`
+    /// attribute
+    pub timestamp: Option<String>,
 }
 impl TestSuites {
     /// Fill up `self` with attributes from the XML tag
@@ -962,6 +970,9 @@ impl TestSuites {
                 QName(b"failures") => self.failures = try_from_attribute_value_u64(a.value)?,
                 QName(b"skipped") => self.skipped = try_from_attribute_value_u64(a.value)?,
                 QName(b"name") => self.name = try_from_attribute_value_string(a.value)?,
+                QName(b"timestamp") => {
+                    self.timestamp = Some(try_from_attribute_value_string(a.value)?)
+                }
                 _ => {}
             };
         }

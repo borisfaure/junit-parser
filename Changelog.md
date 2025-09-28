@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+ - Add support for optional attributes `timestamp` in the `<testsuites>` and
+   `<testcase>` elements.
+
 ## 1.4.0 -- 2025-04-20
 
  - Add support for parsing rerun/flaky elements (`<flakyFailure>`, `<flakyError>`, `<rerunFailure>`, `<rerunError>`) within `<testcase>`.
