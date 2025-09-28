@@ -4,6 +4,7 @@
 
  - Add support for optional attributes `timestamp` in the `<testsuites>` and
    `<testcase>` elements.
+ - Add `parse_junit` binary for parsing and debugging JUnit XML files.
 
 ## 1.4.0 -- 2025-04-20
 
