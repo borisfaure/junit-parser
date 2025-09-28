@@ -1,11 +1,12 @@
 # Changelog
 
-## Unreleased
+## 1.5.0 -- 2025-09-28
 
  - Add support for optional attributes `timestamp` in the `<testsuites>` and
    `<testcase>` elements.
  - Add `parse_junit` binary for parsing and debugging JUnit XML files.
  - Add feature `chrono` to parse `timestamp` attributes as `chrono::DateTime<Utc>`.
+
 
 ## 1.4.0 -- 2025-04-20
 
