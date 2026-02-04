@@ -168,7 +168,7 @@ fn test_properties_duplicates_vec() {
     );
     assert_eq!(ts.cases.len(), 1);
     let tc = &ts.cases[0];
-    assert_eq!(tc.properties.hashmap.len(), 3);
+    assert_eq!(tc.properties.vec.len(), 4);
     assert_eq!(
         tc.properties.vec[0],
         ("language".to_string(), "gibberish".to_string())
@@ -274,7 +274,7 @@ fn test_properties_cdata_vec() {
     );
     assert_eq!(ts.cases.len(), 1);
     let tc = &ts.cases[0];
-    assert_eq!(tc.properties.hashmap.len(), 1);
+    assert_eq!(tc.properties.vec.len(), 1);
     assert_eq!(
         tc.properties.vec[0],
         (
