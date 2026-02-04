@@ -7,10 +7,12 @@ set -u
 declare -A FEATURES
 FEATURES=(
     [0]="serde"
-    [0]="chrono"
-    [0]="serde chrono"
-    [1]="properties_as_hashmap"
-    [2]="properties_as_vector"
+    [1]="chrono"
+    [2]="serde chrono"
+    [3]="properties_as_hashmap"
+    [4]="properties_as_vector"
+    [5]="chrono properties_as_hashmap"
+    [6]="chrono properties_as_vector"
 )
 
 run_doc() {
