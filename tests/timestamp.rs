@@ -32,7 +32,7 @@ fn test_timestamps_as_string() {
 }
 
 #[test]
-//#[cfg(feature = "chrono")]
+#[cfg(feature = "chrono")]
 /// Test parsing the `timestamp` attribute of the `testsuites`, `testsuite`
 /// and `testcase` elements
 fn test_timestamps_as_datetime() {
