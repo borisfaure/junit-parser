@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.1 -- 2026-07-02
+
+ - Update quick-xml to 0.41 to fix:
+    - RUSTSEC-2026-0194: Quadratic run time when checking a start tag for duplicate attribute names
+    - RUSTSEC-2026-0195: Unbounded namespace-declaration allocation in NsReader enables memory-exhaustion denial of service
+
+
 ## 1.5.0 -- 2025-09-28
 
  - Add support for optional attributes `timestamp` in the `<testsuites>` and
