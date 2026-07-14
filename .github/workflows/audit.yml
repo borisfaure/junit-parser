@@ -1,0 +1,42 @@
+---
+name: audit
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - .github/workflows/audit.yml
+      - .github/scripts/ci.bash
+      - .github/scripts/audit-issues.bash
+  schedule:
+    - cron: '0 16 * * 3'  # every Wednesday at 18:00 Paris time (CEST/UTC+2)
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v7
+      - name: install rust
+        run: curl --proto '=https' --tlsv1.3 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+      - name: install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: run audit
+        id: audit
+        run: cargo audit --json | tee audit.json
+        continue-on-error: true
+      - name: open issues for advisories
+        if: steps.audit.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: .github/scripts/audit-issues.bash audit.json
+      - name: fail if advisories found
+        if: steps.audit.outcome == 'failure'
+        run: exit 1
