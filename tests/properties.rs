@@ -90,30 +90,27 @@ fn test_properties_duplicates_hashmap() {
     let ts = &t.suites[0];
     assert_eq!(ts.properties.hashmap.len(), 3);
     assert_eq!(
-        ts.properties.hashmap.get(&"language".to_string()),
+        ts.properties.hashmap.get("language"),
         Some(&"english".to_string())
     );
+    assert_eq!(ts.properties.hashmap.get("author"), Some(&"Me".to_string()));
     assert_eq!(
-        ts.properties.hashmap.get(&"author".to_string()),
-        Some(&"Me".to_string())
-    );
-    assert_eq!(
-        ts.properties.hashmap.get(&"step".to_string()),
+        ts.properties.hashmap.get("step"),
         Some(&"Second step".to_string())
     );
     assert_eq!(ts.cases.len(), 1);
     let tc = &ts.cases[0];
     assert_eq!(tc.properties.hashmap.len(), 3);
     assert_eq!(
-        tc.properties.hashmap.get(&"language".to_string()),
+        tc.properties.hashmap.get("language"),
         Some(&"gibberish".to_string())
     );
     assert_eq!(
-        tc.properties.hashmap.get(&"author".to_string()),
+        tc.properties.hashmap.get("author"),
         Some(&"John Doe".to_string())
     );
     assert_eq!(
-        tc.properties.hashmap.get(&"step".to_string()),
+        tc.properties.hashmap.get("step"),
         Some(&"2nd step".to_string())
     );
 }
@@ -214,7 +211,7 @@ fn test_properties_cdata_hashmap() {
     let ts = &t.suites[0];
     assert_eq!(ts.properties.hashmap.len(), 1);
     assert_eq!(
-        ts.properties.hashmap.get(&"author".to_string()),
+        ts.properties.hashmap.get("author"),
         Some(
             &r#"
         Me
@@ -226,7 +223,7 @@ fn test_properties_cdata_hashmap() {
     let tc = &ts.cases[0];
     assert_eq!(tc.properties.hashmap.len(), 1);
     assert_eq!(
-        tc.properties.hashmap.get(&"author".to_string()),
+        tc.properties.hashmap.get("author"),
         Some(
             &r#"
         John Doe
