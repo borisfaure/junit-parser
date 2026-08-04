@@ -40,11 +40,11 @@ run_fmt() {
 
 run_clippy() {
     rustup component add clippy-preview
-    cargo clippy --no-default-features  -- -D warnings
-    cargo clippy -- -D warnings
+    cargo clippy --all-targets --no-default-features  -- -D warnings
+    cargo clippy --all-targets -- -D warnings
     for FEATURE in "${FEATURES[@]}"
     do
-        cargo clippy --no-default-features --features "$FEATURE" -- -D warnings
+        cargo clippy --all-targets --no-default-features --features "$FEATURE" -- -D warnings
     done
 }
 
