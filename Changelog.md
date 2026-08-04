@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+
+## 1.6.0 -- 2026-08-04
+
  - Add feature `jiff` to parse `timestamp` attributes as `jiff::Timestamp`, as
    an alternative to the `chrono` feature. When both features are enabled,
    `jiff` takes precedence.
