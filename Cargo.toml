@@ -15,9 +15,13 @@ rust-version = "1.56"
 [features]
 default = ["properties_as_hashmap", "properties_as_vector"]
 ## Enables `derive(serde::{Serialize,Deserialize})` on the Test* structures.
-serde = ["dep:serde", "chrono?/serde"]
+serde = ["dep:serde", "chrono?/serde", "jiff?/serde"]
 ## Enables the use of `chrono` crate for parsing timestamps.
 chrono = ["dep:chrono"]
+## Enables the use of `jiff` crate for parsing timestamps.
+## When both `chrono` and `jiff` are enabled, `jiff` takes precedence.
+## Requires Rust 1.70 or later.
+jiff = ["dep:jiff"]
 ## Parse the `properties` element as a hashmap
 properties_as_hashmap = []
 ## Parse the `properties` element as a vector
@@ -38,6 +42,7 @@ thiserror = "2.0"
 serde = { version = "1.0", features = ["derive"], optional = true }
 document-features = { version = "0.2", optional = true }
 chrono = { version = "0.4", optional = true }
+jiff = { version = "0.2", optional = true, default-features = false, features = ["std"] }
 
 [badges]
 github = { repository = "borisfaure/junit-parser"}

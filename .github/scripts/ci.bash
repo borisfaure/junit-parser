@@ -13,6 +13,12 @@ FEATURES=(
     [4]="properties_as_vector"
     [5]="chrono properties_as_hashmap"
     [6]="chrono properties_as_vector"
+    [7]="jiff"
+    [8]="serde jiff"
+    [9]="jiff properties_as_hashmap"
+    [10]="jiff properties_as_vector"
+    [11]="chrono jiff"
+    [12]="serde chrono jiff"
 )
 
 run_doc() {
@@ -24,6 +30,7 @@ run_doc() {
         cargo doc --no-default-features --features "$FEATURE"
     done
     cargo doc --no-default-features --features="document-features,serde,properties_as_hashmap,properties_as_vector,chrono"
+    cargo doc --no-default-features --features="document-features,serde,properties_as_hashmap,properties_as_vector,jiff"
 }
 
 run_fmt() {

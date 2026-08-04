@@ -3,7 +3,7 @@
 //! Some tests may seem duplicate since they test start-end elements and
 //! empty-element tags but the parser uses different codepaths
 
-#[cfg(feature = "chrono")]
+#[cfg(all(feature = "chrono", not(feature = "jiff")))]
 use chrono::TimeZone;
 use std::io::Cursor;
 
@@ -662,7 +662,12 @@ fn test_optional_test_suite_attributes() {
     assert_eq!(tss.suites.len(), 1);
     let ts = &tss.suites[0];
     assert_eq!(ts.assertions, Some(42));
-    #[cfg(feature = "chrono")]
+    #[cfg(feature = "jiff")]
+    assert_eq!(
+        ts.timestamp,
+        Some("2023-09-14T21:43:28Z".parse::<jiff::Timestamp>().unwrap())
+    );
+    #[cfg(all(feature = "chrono", not(feature = "jiff")))]
     assert_eq!(
         ts.timestamp,
         Some(
@@ -671,7 +676,7 @@ fn test_optional_test_suite_attributes() {
                 .unwrap()
         )
     );
-    #[cfg(not(feature = "chrono"))]
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
     assert_eq!(ts.timestamp, Some("2023-09-14T23:43:28+02:00".to_string()));
     assert_eq!(ts.hostname, Some("mycomputer.local".to_string()));
     assert_eq!(ts.id, Some("TestSuiteId".to_string()));

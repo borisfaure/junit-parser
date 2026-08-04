@@ -42,7 +42,7 @@
 /// Errors
 mod errors;
 
-#[cfg(feature = "chrono")]
+#[cfg(all(feature = "chrono", not(feature = "jiff")))]
 use chrono::{DateTime, Utc};
 pub use errors::Error;
 use quick_xml::escape::unescape;
@@ -56,6 +56,27 @@ use std::collections::HashMap;
 use std::io::prelude::*;
 use std::str;
 use std::vec::Vec;
+
+/// Type the `timestamp` attributes are parsed into: `jiff::Timestamp` with the
+/// `jiff` feature enabled.
+///
+/// When both the `chrono` and the `jiff` features are enabled, `jiff` takes
+/// precedence.
+#[cfg(feature = "jiff")]
+pub type TimeStamp = jiff::Timestamp;
+
+/// Type the `timestamp` attributes are parsed into: `chrono::DateTime<Utc>`
+/// with the `chrono` feature enabled.
+///
+/// When both the `chrono` and the `jiff` features are enabled, `jiff` takes
+/// precedence.
+#[cfg(all(feature = "chrono", not(feature = "jiff")))]
+pub type TimeStamp = DateTime<Utc>;
+
+/// Type the `timestamp` attributes are parsed into: the raw [`String`] when
+/// neither the `chrono` nor the `jiff` feature is enabled.
+#[cfg(not(any(feature = "chrono", feature = "jiff")))]
+pub type TimeStamp = String;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Default)]
@@ -189,12 +210,8 @@ pub enum RerunOrFlakyKind {
 #[derive(Debug, Clone, Default)]
 /// Value from a `<flakyFailure />`, `<rerunFailure />`, `<flakyError />`, `<rerunError />` tag
 pub struct RerunOrFlaky {
-    #[cfg(feature = "chrono")]
     /// The `timestamp` attribute
-    pub timestamp: Option<DateTime<Utc>>,
-    #[cfg(not(feature = "chrono"))]
-    /// The `timestamp` attribute
-    pub timestamp: Option<String>,
+    pub timestamp: Option<TimeStamp>,
     /// The `time` attribute
     pub time: f64,
     /// The `type` attribute
@@ -223,14 +240,7 @@ impl RerunOrFlaky {
                 QName(b"type") => self.rerun_type = try_from_attribute_value_string(a.value)?,
                 QName(b"time") => self.time = try_from_attribute_value_f64(a.value)?,
                 QName(b"timestamp") => {
-                    #[cfg(feature = "chrono")]
-                    {
-                        self.timestamp = Some(try_from_attribute_value_datetime(a.value)?);
-                    }
-                    #[cfg(not(feature = "chrono"))]
-                    {
-                        self.timestamp = Some(try_from_attribute_value_string(a.value)?);
-                    }
+                    self.timestamp = Some(try_from_attribute_value_timestamp(a.value)?);
                 }
                 QName(b"message") => self.message = try_from_attribute_value_string(a.value)?,
                 _ => {}
@@ -642,12 +652,8 @@ pub struct TestCase {
     pub system_out: Option<String>,
     /// stderr output from the `system-err` element
     pub system_err: Option<String>,
-    #[cfg(feature = "chrono")]
     /// Timestamp when the test suite was run, from the `timestamp` attribute
-    pub timestamp: Option<DateTime<Utc>>,
-    #[cfg(not(feature = "chrono"))]
-    /// Timestamp when the test suite was run, from the `timestamp` attribute
-    pub timestamp: Option<String>,
+    pub timestamp: Option<TimeStamp>,
     /// Properties of the test case
     pub properties: Properties,
     /// Reruns of the test case
@@ -668,14 +674,7 @@ impl TestCase {
                 QName(b"file") => self.file = Some(try_from_attribute_value_string(a.value)?),
                 QName(b"line") => self.line = Some(try_from_attribute_value_u64(a.value)?),
                 QName(b"timestamp") => {
-                    #[cfg(feature = "chrono")]
-                    {
-                        self.timestamp = Some(try_from_attribute_value_datetime(a.value)?);
-                    }
-                    #[cfg(not(feature = "chrono"))]
-                    {
-                        self.timestamp = Some(try_from_attribute_value_string(a.value)?);
-                    }
+                    self.timestamp = Some(try_from_attribute_value_timestamp(a.value)?);
                 }
                 _ => {}
             };
@@ -854,12 +853,8 @@ pub struct TestSuite {
     pub assertions: Option<u64>,
     /// Name of the test suite, from the `name` attribute
     pub name: String,
-    #[cfg(feature = "chrono")]
     /// Timestamp when the test suite was run, from the `timestamp` attribute
-    pub timestamp: Option<DateTime<Utc>>,
-    #[cfg(not(feature = "chrono"))]
-    /// Timestamp when the test suite was run, from the `timestamp` attribute
-    pub timestamp: Option<String>,
+    pub timestamp: Option<TimeStamp>,
     /// Hostname where the test suite was run, from the `hostname` attribute
     pub hostname: Option<String>,
     /// Identifier of the test suite, from the `id` attribute
@@ -897,14 +892,7 @@ impl TestSuite {
                 }
                 QName(b"name") => self.name = try_from_attribute_value_string(a.value)?,
                 QName(b"timestamp") => {
-                    #[cfg(feature = "chrono")]
-                    {
-                        self.timestamp = Some(try_from_attribute_value_datetime(a.value)?);
-                    }
-                    #[cfg(not(feature = "chrono"))]
-                    {
-                        self.timestamp = Some(try_from_attribute_value_string(a.value)?);
-                    }
+                    self.timestamp = Some(try_from_attribute_value_timestamp(a.value)?);
                 }
                 QName(b"hostname") => {
                     self.hostname = Some(try_from_attribute_value_string(a.value)?)
@@ -989,14 +977,9 @@ pub struct TestSuites {
     pub skipped: u64,
     /// Name of the test suites, from the `name` attribute
     pub name: String,
-    #[cfg(feature = "chrono")]
     /// Timestamp when the test suites were run, from the `timestamp`
     /// attribute
-    pub timestamp: Option<DateTime<Utc>>,
-    #[cfg(not(feature = "chrono"))]
-    /// Timestamp when the test suites were run, from the `timestamp`
-    /// attribute
-    pub timestamp: Option<String>,
+    pub timestamp: Option<TimeStamp>,
 }
 impl TestSuites {
     /// Fill up `self` with attributes from the XML tag
@@ -1011,14 +994,7 @@ impl TestSuites {
                 QName(b"skipped") => self.skipped = try_from_attribute_value_u64(a.value)?,
                 QName(b"name") => self.name = try_from_attribute_value_string(a.value)?,
                 QName(b"timestamp") => {
-                    #[cfg(feature = "chrono")]
-                    {
-                        self.timestamp = Some(try_from_attribute_value_datetime(a.value)?);
-                    }
-                    #[cfg(not(feature = "chrono"))]
-                    {
-                        self.timestamp = Some(try_from_attribute_value_string(a.value)?);
-                    }
+                    self.timestamp = Some(try_from_attribute_value_timestamp(a.value)?);
                 }
                 _ => {}
             };
@@ -1086,13 +1062,22 @@ fn try_from_attribute_value_string(value: Cow<[u8]>) -> Result<String, Error> {
     Ok(u.to_string())
 }
 
-/// Try to decode a timestamp attribute value as [`DateTime<Utc>`]
-#[cfg(feature = "chrono")]
-fn try_from_attribute_value_datetime(value: Cow<[u8]>) -> Result<DateTime<Utc>, Error> {
+/// Try to decode a timestamp attribute value as a [`TimeStamp`]
+fn try_from_attribute_value_timestamp(value: Cow<[u8]>) -> Result<TimeStamp, Error> {
     let s = str::from_utf8(&value)?;
     let u = unescape(s)?;
-    let dt = DateTime::parse_from_rfc3339(&u)?.with_timezone(&Utc);
-    Ok(dt)
+    #[cfg(feature = "jiff")]
+    {
+        Ok(u.parse::<jiff::Timestamp>()?)
+    }
+    #[cfg(all(feature = "chrono", not(feature = "jiff")))]
+    {
+        Ok(DateTime::parse_from_rfc3339(&u)?.with_timezone(&Utc))
+    }
+    #[cfg(not(any(feature = "chrono", feature = "jiff")))]
+    {
+        Ok(u.to_string())
+    }
 }
 
 /// Parse a chunk of xml as system-out or system-err

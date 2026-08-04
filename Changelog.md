@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+ - Add feature `jiff` to parse `timestamp` attributes as `jiff::Timestamp`, as
+   an alternative to the `chrono` feature. When both features are enabled,
+   `jiff` takes precedence.
+ - Expose the `TimeStamp` type alias for the type the `timestamp` attributes
+   are parsed into, depending on the enabled features.
+
+
 ## 1.5.1 -- 2026-07-02
 
  - Update quick-xml to 0.41 to fix:

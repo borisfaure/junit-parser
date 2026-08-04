@@ -29,6 +29,10 @@ pub enum Error {
     #[cfg(feature = "chrono")]
     #[error("Error while decoding Date/Time")]
     ChronoParseError(#[from] chrono::format::ParseError),
+    /// Jiff Error
+    #[cfg(feature = "jiff")]
+    #[error("Error while decoding Date/Time")]
+    JiffParseError(#[from] jiff::Error),
 }
 
 impl From<::quick_xml::events::attributes::AttrError> for Error {
