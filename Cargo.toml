@@ -10,7 +10,7 @@ readme = "README.md"
 description = "Rust library to parse JUnit XML files"
 repository = "https://github.com/borisfaure/junit-parser"
 documentation = "https://docs.rs/junit-parser/"
-rust-version = "1.56"
+rust-version = "1.86"
 
 [features]
 default = ["properties_as_hashmap", "properties_as_vector"]
@@ -20,7 +20,6 @@ serde = ["dep:serde", "chrono?/serde", "jiff?/serde"]
 chrono = ["dep:chrono"]
 ## Enables the use of `jiff` crate for parsing timestamps.
 ## When both `chrono` and `jiff` are enabled, `jiff` takes precedence.
-## Requires Rust 1.70 or later.
 jiff = ["dep:jiff"]
 ## Parse the `properties` element as a hashmap
 properties_as_hashmap = []
