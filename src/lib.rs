@@ -54,7 +54,6 @@ use std::borrow::Cow;
 #[cfg(feature = "properties_as_hashmap")]
 use std::collections::HashMap;
 use std::io::prelude::*;
-use std::str;
 use std::vec::Vec;
 
 /// Type the `timestamp` attributes are parsed into: `jiff::Timestamp` with the
@@ -100,8 +99,8 @@ fn parse_property<B: BufRead>(
     for a in e.attributes() {
         let a = a?;
         match a.key {
-            QName(b"name") => k = Some(try_from_attribute_value_string(a.value)?),
-            QName(b"value") => v = Some(try_from_attribute_value_string(a.value)?),
+            QName("name") => k = Some(try_from_attribute_value_string(a.value)?),
+            QName("value") => v = Some(try_from_attribute_value_string(a.value)?),
             _ => {}
         };
     }
@@ -109,22 +108,22 @@ fn parse_property<B: BufRead>(
         loop {
             let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"property") => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName("property") => break,
                 Ok(XMLEvent::Eof) => {
                     return Err(Error::UnexpectedEndOfFile("property".to_string()));
                 }
                 Ok(XMLEvent::Text(e)) => match v {
-                    None => v = Some(e.decode()?.trim().to_string()),
+                    None => v = Some(e.trim().to_string()),
                     Some(ref mut val) => {
                         val.push('\n');
-                        val.push_str(e.decode()?.trim());
+                        val.push_str(e.trim());
                     }
                 },
                 Ok(XMLEvent::CData(e)) => match v {
-                    None => v = Some(str::from_utf8(&e)?.to_string()),
+                    None => v = Some(e.as_ref().to_string()),
                     Some(ref mut val) => {
                         val.push('\n');
-                        val.push_str(str::from_utf8(&e)?);
+                        val.push_str(e.as_ref());
                     }
                 },
                 Ok(XMLEvent::Start(ref e)) => {
@@ -150,13 +149,13 @@ impl Properties {
         loop {
             let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"properties") => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName("properties") => break,
 
-                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"property") => {
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName("property") => {
                     let (k, v) = parse_property::<B>(e, None)?;
                     p.add_property(k, v);
                 }
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"property") => {
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName("property") => {
                     let (k, v) = parse_property(e, Some(r))?;
                     p.add_property(k, v);
                 }
@@ -237,12 +236,12 @@ impl RerunOrFlaky {
             let a = a?;
             match a.key {
                 // The schema specifies 'type' attribute, mapping to rerun_type
-                QName(b"type") => self.rerun_type = try_from_attribute_value_string(a.value)?,
-                QName(b"time") => self.time = try_from_attribute_value_f64(a.value)?,
-                QName(b"timestamp") => {
+                QName("type") => self.rerun_type = try_from_attribute_value_string(a.value)?,
+                QName("time") => self.time = try_from_attribute_value_f64(a.value)?,
+                QName("timestamp") => {
                     self.timestamp = Some(try_from_attribute_value_timestamp(a.value)?);
                 }
-                QName(b"message") => self.message = try_from_attribute_value_string(a.value)?,
+                QName("message") => self.message = try_from_attribute_value_string(a.value)?,
                 _ => {}
             };
         }
@@ -282,22 +281,22 @@ impl RerunOrFlaky {
                 Ok(XMLEvent::End(ref end_event)) if end_event.name() == end_tag_name => break,
                 Ok(XMLEvent::Text(e)) => {
                     if rt.text.is_empty() {
-                        rt.text = e.decode()?.trim().to_string();
+                        rt.text = e.trim().to_string();
                     } else {
                         rt.text.push('\n');
-                        rt.text.push_str(e.decode()?.trim());
+                        rt.text.push_str(e.trim());
                     }
                 }
                 Ok(XMLEvent::CData(e)) => {
                     if rt.text.is_empty() {
-                        rt.text = str::from_utf8(&e)?.to_string();
+                        rt.text = e.as_ref().to_string();
                     } else {
                         rt.text.push('\n');
-                        rt.text.push_str(str::from_utf8(&e)?);
+                        rt.text.push_str(e.as_ref());
                     }
                 }
                 Ok(XMLEvent::Start(ref start_event)) => match start_event.name() {
-                    QName(b"system-out") => {
+                    QName("system-out") => {
                         if let Some(parsed_content) = parse_system(start_event, r)? {
                             let current_out = rt.system_out.get_or_insert_with(String::new);
                             if !current_out.is_empty() {
@@ -306,7 +305,7 @@ impl RerunOrFlaky {
                             current_out.push_str(&parsed_content);
                         }
                     }
-                    QName(b"system-err") => {
+                    QName("system-err") => {
                         if let Some(parsed_content) = parse_system(start_event, r)? {
                             let current_err = rt.system_err.get_or_insert_with(String::new);
                             if !current_err.is_empty() {
@@ -315,7 +314,7 @@ impl RerunOrFlaky {
                             current_err.push_str(&parsed_content);
                         }
                     }
-                    QName(b"stackTrace") => {
+                    QName("stackTrace") => {
                         // Overwrite stackTrace as multiple instances are unlikely/undefined
                         rt.stack_trace = parse_system(start_event, r)?;
                     }
@@ -324,14 +323,15 @@ impl RerunOrFlaky {
                     }
                 },
                 Ok(XMLEvent::Empty(ref empty_event)) => match empty_event.name() {
-                    QName(b"system-out") => {}
-                    QName(b"system-err") => {}
-                    QName(b"stackTrace") => {}
+                    QName("system-out") => {}
+                    QName("system-err") => {}
+                    QName("stackTrace") => {}
                     _ => {}
                 },
                 Ok(XMLEvent::Eof) => {
-                    let tag_name = String::from_utf8_lossy(end_tag_name.as_ref()).to_string();
-                    return Err(Error::UnexpectedEndOfFile(tag_name));
+                    return Err(Error::UnexpectedEndOfFile(
+                        end_tag_name.into_inner().to_string(),
+                    ));
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -359,8 +359,8 @@ impl TestFailure {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                QName(b"type") => self.failure_type = try_from_attribute_value_string(a.value)?,
-                QName(b"message") => self.message = try_from_attribute_value_string(a.value)?,
+                QName("type") => self.failure_type = try_from_attribute_value_string(a.value)?,
+                QName("message") => self.message = try_from_attribute_value_string(a.value)?,
                 _ => {}
             };
         }
@@ -381,13 +381,13 @@ impl TestFailure {
         loop {
             let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"failure") => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName("failure") => break,
                 Ok(XMLEvent::Text(e)) => {
                     if tf.text.is_empty() {
-                        tf.text = e.decode()?.trim().to_string();
+                        tf.text = e.trim().to_string();
                     } else {
                         tf.text.push('\n');
-                        tf.text.push_str(e.decode()?.trim());
+                        tf.text.push_str(e.trim());
                     }
                 }
                 Ok(XMLEvent::Eof) => {
@@ -395,10 +395,10 @@ impl TestFailure {
                 }
                 Ok(XMLEvent::CData(e)) => {
                     if tf.text.is_empty() {
-                        tf.text = str::from_utf8(&e)?.to_string();
+                        tf.text = e.as_ref().to_string();
                     } else {
                         tf.text.push('\n');
-                        tf.text.push_str(str::from_utf8(&e)?);
+                        tf.text.push_str(e.as_ref());
                     }
                 }
                 Ok(XMLEvent::Start(ref e)) => {
@@ -430,8 +430,8 @@ impl TestError {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                QName(b"type") => self.error_type = try_from_attribute_value_string(a.value)?,
-                QName(b"message") => self.message = try_from_attribute_value_string(a.value)?,
+                QName("type") => self.error_type = try_from_attribute_value_string(a.value)?,
+                QName("message") => self.message = try_from_attribute_value_string(a.value)?,
                 _ => {}
             };
         }
@@ -452,13 +452,13 @@ impl TestError {
         loop {
             let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"error") => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName("error") => break,
                 Ok(XMLEvent::Text(e)) => {
                     if te.text.is_empty() {
-                        te.text = e.decode()?.trim().to_string();
+                        te.text = e.trim().to_string();
                     } else {
                         te.text.push('\n');
-                        te.text.push_str(e.decode()?.trim());
+                        te.text.push_str(e.trim());
                     }
                 }
                 Ok(XMLEvent::Eof) => {
@@ -466,10 +466,10 @@ impl TestError {
                 }
                 Ok(XMLEvent::CData(e)) => {
                     if te.text.is_empty() {
-                        te.text = str::from_utf8(&e)?.to_string();
+                        te.text = e.as_ref().to_string();
                     } else {
                         te.text.push('\n');
-                        te.text.push_str(str::from_utf8(&e)?);
+                        te.text.push_str(e.as_ref());
                     }
                 }
                 Ok(XMLEvent::Start(ref e)) => {
@@ -501,8 +501,8 @@ impl TestSkipped {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                QName(b"type") => self.skipped_type = try_from_attribute_value_string(a.value)?,
-                QName(b"message") => self.message = try_from_attribute_value_string(a.value)?,
+                QName("type") => self.skipped_type = try_from_attribute_value_string(a.value)?,
+                QName("message") => self.message = try_from_attribute_value_string(a.value)?,
                 _ => {}
             };
         }
@@ -523,13 +523,13 @@ impl TestSkipped {
         loop {
             let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"skipped") => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName("skipped") => break,
                 Ok(XMLEvent::Text(e)) => {
                     if ts.text.is_empty() {
-                        ts.text = e.decode()?.trim().to_string();
+                        ts.text = e.trim().to_string();
                     } else {
                         ts.text.push('\n');
-                        ts.text.push_str(e.decode()?.trim());
+                        ts.text.push_str(e.trim());
                     }
                 }
                 Ok(XMLEvent::Eof) => {
@@ -537,10 +537,10 @@ impl TestSkipped {
                 }
                 Ok(XMLEvent::CData(e)) => {
                     if ts.text.is_empty() {
-                        ts.text = str::from_utf8(&e)?.to_string();
+                        ts.text = e.as_ref().to_string();
                     } else {
                         ts.text.push('\n');
-                        ts.text.push_str(str::from_utf8(&e)?);
+                        ts.text.push_str(e.as_ref());
                     }
                 }
                 Ok(XMLEvent::Start(ref e)) => {
@@ -665,15 +665,15 @@ impl TestCase {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                QName(b"time") => self.time = try_from_attribute_value_f64(a.value)?,
-                QName(b"name") => self.original_name = try_from_attribute_value_string(a.value)?,
-                QName(b"classname") => {
+                QName("time") => self.time = try_from_attribute_value_f64(a.value)?,
+                QName("name") => self.original_name = try_from_attribute_value_string(a.value)?,
+                QName("classname") => {
                     self.classname = Some(try_from_attribute_value_string(a.value)?)
                 }
-                QName(b"group") => self.group = Some(try_from_attribute_value_string(a.value)?),
-                QName(b"file") => self.file = Some(try_from_attribute_value_string(a.value)?),
-                QName(b"line") => self.line = Some(try_from_attribute_value_u64(a.value)?),
-                QName(b"timestamp") => {
+                QName("group") => self.group = Some(try_from_attribute_value_string(a.value)?),
+                QName("file") => self.file = Some(try_from_attribute_value_string(a.value)?),
+                QName("line") => self.line = Some(try_from_attribute_value_u64(a.value)?),
+                QName("timestamp") => {
                     self.timestamp = Some(try_from_attribute_value_timestamp(a.value)?);
                 }
                 _ => {}
@@ -707,94 +707,94 @@ impl TestCase {
         loop {
             let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testcase") => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName("testcase") => break,
 
                 Ok(XMLEvent::Empty(ref empty_event)) => match empty_event.name() {
-                    QName(b"system-out") => {
+                    QName("system-out") => {
                         if tc.system_out.is_none() {
                             tc.system_out = Some(String::new());
                         }
                     }
-                    QName(b"system-err") => {
+                    QName("system-err") => {
                         if tc.system_err.is_none() {
                             tc.system_err = Some(String::new());
                         }
                     }
-                    QName(b"flakyFailure") => {
+                    QName("flakyFailure") => {
                         tc.reruns.push(RerunOrFlaky::new_empty(
                             empty_event,
                             RerunOrFlakyKind::FlakyFailure,
                         )?);
                     }
-                    QName(b"flakyError") => {
+                    QName("flakyError") => {
                         tc.reruns.push(RerunOrFlaky::new_empty(
                             empty_event,
                             RerunOrFlakyKind::FlakyError,
                         )?);
                     }
-                    QName(b"rerunFailure") => {
+                    QName("rerunFailure") => {
                         tc.reruns.push(RerunOrFlaky::new_empty(
                             empty_event,
                             RerunOrFlakyKind::RerunFailure,
                         )?);
                     }
-                    QName(b"rerunError") => {
+                    QName("rerunError") => {
                         tc.reruns.push(RerunOrFlaky::new_empty(
                             empty_event,
                             RerunOrFlakyKind::RerunError,
                         )?);
                     }
-                    QName(b"skipped") => {
+                    QName("skipped") => {
                         tc.status = TestStatus::Skipped(TestSkipped::new_empty(empty_event)?);
                     }
-                    QName(b"failure") => {
+                    QName("failure") => {
                         tc.status = TestStatus::Failure(TestFailure::new_empty(empty_event)?);
                     }
-                    QName(b"error") => {
+                    QName("error") => {
                         tc.status = TestStatus::Error(TestError::new_empty(empty_event)?);
                     }
                     _ => {}
                 },
 
                 Ok(XMLEvent::Start(ref start_event)) => match start_event.name() {
-                    QName(b"skipped") => {
+                    QName("skipped") => {
                         tc.status = TestStatus::Skipped(TestSkipped::from_reader(start_event, r)?);
                     }
-                    QName(b"failure") => {
+                    QName("failure") => {
                         tc.status = TestStatus::Failure(TestFailure::from_reader(start_event, r)?);
                     }
-                    QName(b"error") => {
+                    QName("error") => {
                         tc.status = TestStatus::Error(TestError::from_reader(start_event, r)?);
                     }
-                    QName(b"flakyFailure") => {
+                    QName("flakyFailure") => {
                         tc.reruns.push(RerunOrFlaky::from_reader(
                             start_event,
                             r,
                             RerunOrFlakyKind::FlakyFailure,
                         )?);
                     }
-                    QName(b"flakyError") => {
+                    QName("flakyError") => {
                         tc.reruns.push(RerunOrFlaky::from_reader(
                             start_event,
                             r,
                             RerunOrFlakyKind::FlakyError,
                         )?);
                     }
-                    QName(b"rerunFailure") => {
+                    QName("rerunFailure") => {
                         tc.reruns.push(RerunOrFlaky::from_reader(
                             start_event,
                             r,
                             RerunOrFlakyKind::RerunFailure,
                         )?);
                     }
-                    QName(b"rerunError") => {
+                    QName("rerunError") => {
                         tc.reruns.push(RerunOrFlaky::from_reader(
                             start_event,
                             r,
                             RerunOrFlakyKind::RerunError,
                         )?);
                     }
-                    QName(b"system-out") => {
+                    QName("system-out") => {
                         if let Some(parsed_content) = parse_system(start_event, r)? {
                             let current_out = tc.system_out.get_or_insert_with(String::new);
                             if !current_out.is_empty() {
@@ -803,7 +803,7 @@ impl TestCase {
                             current_out.push_str(&parsed_content);
                         }
                     }
-                    QName(b"system-err") => {
+                    QName("system-err") => {
                         if let Some(parsed_content) = parse_system(start_event, r)? {
                             let current_err = tc.system_err.get_or_insert_with(String::new);
                             if !current_err.is_empty() {
@@ -812,7 +812,7 @@ impl TestCase {
                             current_err.push_str(&parsed_content);
                         }
                     }
-                    QName(b"properties") => {
+                    QName("properties") => {
                         tc.properties = Properties::from_reader(r)?;
                     }
                     _ => {
@@ -820,7 +820,7 @@ impl TestCase {
                     }
                 },
                 Ok(XMLEvent::Eof) => {
-                    return Err(Error::UnexpectedEndOfFile("testcase".to_string()))
+                    return Err(Error::UnexpectedEndOfFile("testcase".to_string()));
                 }
                 Err(err) => return Err(err.into()),
                 _ => (),
@@ -882,27 +882,27 @@ impl TestSuite {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                QName(b"time") => self.time = try_from_attribute_value_f64(a.value)?,
-                QName(b"tests") => self.tests = try_from_attribute_value_u64(a.value)?,
-                QName(b"errors") => self.errors = try_from_attribute_value_u64(a.value)?,
-                QName(b"failures") => self.failures = try_from_attribute_value_u64(a.value)?,
-                QName(b"skipped") => self.skipped = try_from_attribute_value_u64(a.value)?,
-                QName(b"assertions") => {
+                QName("time") => self.time = try_from_attribute_value_f64(a.value)?,
+                QName("tests") => self.tests = try_from_attribute_value_u64(a.value)?,
+                QName("errors") => self.errors = try_from_attribute_value_u64(a.value)?,
+                QName("failures") => self.failures = try_from_attribute_value_u64(a.value)?,
+                QName("skipped") => self.skipped = try_from_attribute_value_u64(a.value)?,
+                QName("assertions") => {
                     self.assertions = Some(try_from_attribute_value_u64(a.value)?)
                 }
-                QName(b"name") => self.name = try_from_attribute_value_string(a.value)?,
-                QName(b"timestamp") => {
+                QName("name") => self.name = try_from_attribute_value_string(a.value)?,
+                QName("timestamp") => {
                     self.timestamp = Some(try_from_attribute_value_timestamp(a.value)?);
                 }
-                QName(b"hostname") => {
+                QName("hostname") => {
                     self.hostname = Some(try_from_attribute_value_string(a.value)?)
                 }
-                QName(b"id") => self.id = Some(try_from_attribute_value_string(a.value)?),
-                QName(b"package") => self.package = Some(try_from_attribute_value_string(a.value)?),
-                QName(b"file") => self.file = Some(try_from_attribute_value_string(a.value)?),
-                QName(b"log") => self.log = Some(try_from_attribute_value_string(a.value)?),
-                QName(b"url") => self.url = Some(try_from_attribute_value_string(a.value)?),
-                QName(b"version") => self.version = Some(try_from_attribute_value_string(a.value)?),
+                QName("id") => self.id = Some(try_from_attribute_value_string(a.value)?),
+                QName("package") => self.package = Some(try_from_attribute_value_string(a.value)?),
+                QName("file") => self.file = Some(try_from_attribute_value_string(a.value)?),
+                QName("log") => self.log = Some(try_from_attribute_value_string(a.value)?),
+                QName("url") => self.url = Some(try_from_attribute_value_string(a.value)?),
+                QName("version") => self.version = Some(try_from_attribute_value_string(a.value)?),
                 _ => {}
             };
         }
@@ -923,25 +923,25 @@ impl TestSuite {
         loop {
             let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuite") => break,
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
+                Ok(XMLEvent::End(ref e)) if e.name() == QName("testsuite") => break,
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName("testsuite") => {
                     ts.suites.push(TestSuite::from_reader(e, r)?);
                 }
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testcase") => {
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName("testcase") => {
                     ts.cases.push(TestCase::from_reader(e, r)?);
                 }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testcase") => {
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName("testcase") => {
                     ts.cases.push(TestCase::new_empty(e)?);
                 }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"system-out") => {}
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-out") => {
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName("system-out") => {}
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName("system-out") => {
                     ts.system_out = parse_system(e, r)?;
                 }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"system-err") => {}
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"system-err") => {
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName("system-err") => {}
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName("system-err") => {
                     ts.system_err = parse_system(e, r)?;
                 }
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"properties") => {
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName("properties") => {
                     ts.properties = Properties::from_reader(r)?;
                 }
                 Ok(XMLEvent::Start(ref e)) => {
@@ -987,13 +987,13 @@ impl TestSuites {
         for a in e.attributes() {
             let a = a?;
             match a.key {
-                QName(b"time") => self.time = try_from_attribute_value_f64(a.value)?,
-                QName(b"tests") => self.tests = try_from_attribute_value_u64(a.value)?,
-                QName(b"errors") => self.errors = try_from_attribute_value_u64(a.value)?,
-                QName(b"failures") => self.failures = try_from_attribute_value_u64(a.value)?,
-                QName(b"skipped") => self.skipped = try_from_attribute_value_u64(a.value)?,
-                QName(b"name") => self.name = try_from_attribute_value_string(a.value)?,
-                QName(b"timestamp") => {
+                QName("time") => self.time = try_from_attribute_value_f64(a.value)?,
+                QName("tests") => self.tests = try_from_attribute_value_u64(a.value)?,
+                QName("errors") => self.errors = try_from_attribute_value_u64(a.value)?,
+                QName("failures") => self.failures = try_from_attribute_value_u64(a.value)?,
+                QName("skipped") => self.skipped = try_from_attribute_value_u64(a.value)?,
+                QName("name") => self.name = try_from_attribute_value_string(a.value)?,
+                QName("timestamp") => {
                     self.timestamp = Some(try_from_attribute_value_timestamp(a.value)?);
                 }
                 _ => {}
@@ -1016,12 +1016,12 @@ impl TestSuites {
         loop {
             let mut buf = Vec::new();
             match r.read_event_into(&mut buf) {
-                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testsuites") => break,
-                Ok(XMLEvent::End(ref e)) if e.name() == QName(b"testrun") => break,
-                Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
+                Ok(XMLEvent::End(ref e)) if e.name() == QName("testsuites") => break,
+                Ok(XMLEvent::End(ref e)) if e.name() == QName("testrun") => break,
+                Ok(XMLEvent::Start(ref e)) if e.name() == QName("testsuite") => {
                     ts.suites.push(TestSuite::from_reader(e, r)?);
                 }
-                Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuite") => {
+                Ok(XMLEvent::Empty(ref e)) if e.name() == QName("testsuite") => {
                     ts.suites.push(TestSuite::new_empty(e)?);
                 }
                 Ok(XMLEvent::Eof) => {
@@ -1039,33 +1039,31 @@ impl TestSuites {
     }
 }
 
-/// Try to decode attribute value as [`f64`]
-fn try_from_attribute_value_f64(value: Cow<[u8]>) -> Result<f64, Error> {
-    match str::from_utf8(&value)? {
+/// Try to parse attribute value as [`f64`]
+fn try_from_attribute_value_f64(value: Cow<str>) -> Result<f64, Error> {
+    match value.as_ref() {
         "" => Ok(f64::default()),
         s => Ok(s.parse::<f64>()?),
     }
 }
 
-/// Try to decode attribute value as [`u64`]
-fn try_from_attribute_value_u64(value: Cow<[u8]>) -> Result<u64, Error> {
-    match str::from_utf8(&value)? {
+/// Try to parse attribute value as [`u64`]
+fn try_from_attribute_value_u64(value: Cow<str>) -> Result<u64, Error> {
+    match value.as_ref() {
         "" => Ok(u64::default()),
         s => Ok(s.parse::<u64>()?),
     }
 }
 
-/// Try to decode and unescape attribute value as [`String`]
-fn try_from_attribute_value_string(value: Cow<[u8]>) -> Result<String, Error> {
-    let s = str::from_utf8(&value)?;
-    let u = unescape(s)?;
+/// Try to unescape attribute value as [`String`]
+fn try_from_attribute_value_string(value: Cow<str>) -> Result<String, Error> {
+    let u = unescape(&value)?;
     Ok(u.to_string())
 }
 
-/// Try to decode a timestamp attribute value as a [`TimeStamp`]
-fn try_from_attribute_value_timestamp(value: Cow<[u8]>) -> Result<TimeStamp, Error> {
-    let s = str::from_utf8(&value)?;
-    let u = unescape(s)?;
+/// Try to parse a timestamp attribute value as a [`TimeStamp`]
+fn try_from_attribute_value_timestamp(value: Cow<str>) -> Result<TimeStamp, Error> {
+    let u = unescape(&value)?;
     #[cfg(feature = "jiff")]
     {
         Ok(u.parse::<jiff::Timestamp>()?)
@@ -1091,14 +1089,15 @@ fn parse_system<B: BufRead>(
         match r.read_event_into(&mut buf) {
             Ok(XMLEvent::End(ref e)) if e.name() == orig.name() => break,
             Ok(XMLEvent::Text(e)) => {
-                res.get_or_insert(String::new()).push_str(&e.decode()?);
+                res.get_or_insert(String::new()).push_str(e.as_ref());
             }
             Ok(XMLEvent::CData(e)) => {
-                res.get_or_insert(String::new())
-                    .push_str(str::from_utf8(&e)?);
+                res.get_or_insert(String::new()).push_str(e.as_ref());
             }
             Ok(XMLEvent::Eof) => {
-                return Err(Error::UnexpectedEndOfFile(format!("{:?}", orig.name())));
+                return Err(Error::UnexpectedEndOfFile(
+                    orig.name().into_inner().to_string(),
+                ));
             }
             Ok(XMLEvent::Start(ref e)) => {
                 r.read_to_end_into(e.name(), &mut Vec::new())?;
@@ -1134,25 +1133,25 @@ pub fn from_reader<B: BufRead>(reader: B) -> Result<TestSuites, Error> {
     loop {
         let mut buf = Vec::new();
         match r.read_event_into(&mut buf) {
-            Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuites") => {
+            Ok(XMLEvent::Empty(ref e)) if e.name() == QName("testsuites") => {
                 return TestSuites::new_empty(e);
             }
-            Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testrun") => {
+            Ok(XMLEvent::Empty(ref e)) if e.name() == QName("testrun") => {
                 return TestSuites::new_empty(e);
             }
-            Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuites") => {
+            Ok(XMLEvent::Start(ref e)) if e.name() == QName("testsuites") => {
                 return TestSuites::from_reader(e, &mut r);
             }
-            Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testrun") => {
+            Ok(XMLEvent::Start(ref e)) if e.name() == QName("testrun") => {
                 return TestSuites::from_reader(e, &mut r);
             }
-            Ok(XMLEvent::Empty(ref e)) if e.name() == QName(b"testsuite") => {
+            Ok(XMLEvent::Empty(ref e)) if e.name() == QName("testsuite") => {
                 let ts = TestSuite::new_empty(e)?;
                 let mut suites = TestSuites::default();
                 suites.suites.push(ts);
                 return Ok(suites);
             }
-            Ok(XMLEvent::Start(ref e)) if e.name() == QName(b"testsuite") => {
+            Ok(XMLEvent::Start(ref e)) if e.name() == QName("testsuite") => {
                 let ts = TestSuite::from_reader(e, &mut r)?;
                 let mut suites = TestSuites::default();
                 suites.suites.push(ts);

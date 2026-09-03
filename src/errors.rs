@@ -7,7 +7,7 @@ pub enum Error {
     /// Error while parsing XML
     #[error("Error while parsing XML")]
     XMLError(#[from] ::quick_xml::Error),
-    /// Error while decoding XML
+    /// Error while decoding XML. Unreachable, but kept for compatibility
     #[error("Error while decoding XML")]
     EncodingError(#[from] ::quick_xml::encoding::EncodingError),
     /// Error while converting f64 attribute
@@ -16,7 +16,8 @@ pub enum Error {
     /// Error while converting u64 attribute
     #[error("Error while converting u64 attribute")]
     ParseIntError(#[from] std::num::ParseIntError),
-    /// Error while converting bytes to Utf8
+    /// Error while converting bytes to Utf8. Unreachable, but kept for
+    /// compatibility
     #[error("Error while converting bytes to Utf8")]
     ParseUt8Error(#[from] std::str::Utf8Error),
     /// Error parsing the `property` element: missing `name`
