@@ -45,11 +45,11 @@ mod errors;
 #[cfg(all(feature = "chrono", not(feature = "jiff")))]
 use chrono::{DateTime, Utc};
 pub use errors::Error;
+use quick_xml::Reader as XMLReader;
 use quick_xml::escape::unescape;
 use quick_xml::events::BytesStart as XMLBytesStart;
 use quick_xml::events::Event as XMLEvent;
 use quick_xml::name::QName;
-use quick_xml::Reader as XMLReader;
 use std::borrow::Cow;
 #[cfg(feature = "properties_as_hashmap")]
 use std::collections::HashMap;

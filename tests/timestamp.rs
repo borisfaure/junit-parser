@@ -78,7 +78,7 @@ fn test_timestamps_as_datetime() {
 /// Test parsing the `timestamp` attribute of the `testsuites`, `testsuite`
 /// and `testcase` elements
 fn test_timestamps_as_jiff_timestamp() {
-    use jiff::{civil::date, tz::TimeZone, Timestamp};
+    use jiff::{Timestamp, civil::date, tz::TimeZone};
 
     /// Build the [`Timestamp`] for the given UTC date and time
     fn utc(y: i16, m: i8, d: i8, h: i8, mi: i8, s: i8) -> Timestamp {

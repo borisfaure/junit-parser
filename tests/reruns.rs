@@ -437,14 +437,16 @@ fn test_primary_failure_with_reruns() {
 
     // Check reruns are still recorded
     assert_eq!(case.reruns.len(), 2);
-    assert!(case
-        .reruns
-        .iter()
-        .any(|r| matches!(r.kind, RerunOrFlakyKind::FlakyFailure)));
-    assert!(case
-        .reruns
-        .iter()
-        .any(|r| matches!(r.kind, RerunOrFlakyKind::RerunError)));
+    assert!(
+        case.reruns
+            .iter()
+            .any(|r| matches!(r.kind, RerunOrFlakyKind::FlakyFailure))
+    );
+    assert!(
+        case.reruns
+            .iter()
+            .any(|r| matches!(r.kind, RerunOrFlakyKind::RerunError))
+    );
 }
 
 // Test case where rerun element is empty (just attributes, no body/nested elements)
