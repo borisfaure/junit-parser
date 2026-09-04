@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.7.0 -- 2026-09-04
+
+ - Update quick-xml to 0.42
+ - Raise minimum supported Rust version to 1.86
+ - Mote to Rust 2024 edition
 
 
 ## 1.6.0 -- 2026-08-04
