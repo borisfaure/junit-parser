@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.1 -- 2026-11-23
+
+ - Update jiff to 1.0
+
+
 ## 1.7.0 -- 2026-09-04
 
  - Update quick-xml to 0.42
